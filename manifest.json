@@ -1,0 +1,17 @@
+{
+  "name": "旅行計畫",
+  "short_name": "旅行",
+  "description": "行程規劃、記帳、地圖一次搞定",
+  "start_url": "./travel-app.html",
+  "display": "standalone",
+  "background_color": "#2C2416",
+  "theme_color": "#C8703A",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%23C8703A'/><text y='130' x='96' text-anchor='middle' font-size='110'>✈</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}
