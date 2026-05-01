@@ -1,7 +1,7 @@
 {
   "name": "旅行計畫",
   "short_name": "旅行",
-  "description": "行程規劃、記帳、地圖一次搞定",
+  "description": "行程規劃、記帳一次搞定",
   "start_url": "./travel-app.html",
   "display": "standalone",
   "background_color": "#2C2416",
