@@ -419,6 +419,7 @@ select.field-input option{background:#880000;color:white;}
     <div style="background:#CC0000;padding:16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;border-bottom:3px solid #990000">
       <button onclick="closeMemView()" style="background:rgba(255,255,255,.15);border:none;border-radius:10px;color:white;padding:8px 12px;font-family:'Noto Sans TC',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap">✕ 關閉</button>
       <div id="mem-view-title" style="font-family:'Press Start 2P',monospace;font-size:11px;color:white;line-height:1.7;flex:1"></div>
+      <button onclick="copyMemToTrip()" style="background:rgba(255,255,255,.15);border:none;border-radius:10px;color:white;padding:8px 10px;font-family:'Noto Sans TC',sans-serif;font-size:12px;cursor:pointer;white-space:nowrap;flex-shrink:0">✏️ 複製編輯</button>
       <div style="position:relative;flex-shrink:0">
         <button onclick="toggleMemExportMenu(event)" style="background:rgba(255,255,255,.15);border:none;border-radius:10px;color:white;padding:8px 12px;font-family:'Noto Sans TC',sans-serif;font-size:13px;cursor:pointer">📤</button>
         <div id="mem-export-menu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#222;border:1px solid rgba(255,255,255,.15);border-radius:10px;min-width:130px;z-index:999;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.4)">
@@ -680,6 +681,29 @@ function exportMemPDF(){
   trip=mem.trip;flights=mem.flights;planItems=mem.planItems;transports=mem.transports;expenses=mem.expenses;exchangeRate=mem.exchangeRate||null;
   exportPDF();
   trip=_t;flights=_fl;planItems=_pi;transports=_tr;expenses=_ex;exchangeRate=_r;
+}
+function copyMemToTrip(){
+  var mem=memories.filter(function(m){return m.id===currentMemId;})[0];if(!mem)return;
+  if(trip&&trip.dest){
+    if(!confirm('套用「'+mem.trip.dest+'」將覆蓋目前的行程「'+trip.dest+'」\n確定後請重新儲存為新的回憶。\n\n確定繼續？'))return;
+  }
+  trip=JSON.parse(JSON.stringify(mem.trip));
+  planItems=JSON.parse(JSON.stringify(mem.planItems));
+  transports=JSON.parse(JSON.stringify(mem.transports));
+  flights=JSON.parse(JSON.stringify(mem.flights));
+  expenses=JSON.parse(JSON.stringify(mem.expenses));
+  dayStartTimes=JSON.parse(JSON.stringify(mem.dayStartTimes||{}));
+  exchangeRate=mem.exchangeRate||null;
+  currentDay=0;editMode=false;openTcId=null;openEditId=null;openBpEditId=null;openExpEditIdx=null;
+  var maxId=0;
+  planItems.forEach(function(x){if(x.id>maxId)maxId=x.id;});
+  transports.forEach(function(x){if(x.id>maxId)maxId=x.id;});
+  flights.forEach(function(x){if(x.id>maxId)maxId=x.id;});
+  _id=maxId+1;
+  saveData();
+  closeMemView();
+  showApp();renderAll();
+  if(!exchangeRate&&trip.currency)fetchRate(trip.currency);
 }
 function toggleMemSummary(){
   memSummaryOpen=!memSummaryOpen;
@@ -1503,9 +1527,18 @@ function renderExpSummary(){
   var catMap={};
   expenses.forEach(function(e){catMap[e.cat]=(catMap[e.cat]||0)+e.amount;});
   var catRows=Object.keys(catMap).sort(function(a,b){return catMap[b]-catMap[a];}).map(function(c){
-    return'<div style="display:flex;justify-content:space-between;padding:3px 0">'+
-      '<span style="color:#aaa;font-size:12px">'+c+'</span>'+
-      '<span style="color:#ccc;font-size:12px;font-family:\'Share Tech Mono\',monospace">'+catMap[c].toLocaleString()+'</span></div>';
+    var def=null;for(var i=0;i<EXP_CATS_DEF.length;i++){if(EXP_CATS_DEF[i].key===c){def=EXP_CATS_DEF[i];break;}}
+    var label=def?def.label:c;
+    var cpct=grandTotal>0?Math.round(catMap[c]/grandTotal*100):0;
+    return'<div style="margin-bottom:9px">'+
+      '<div style="display:flex;justify-content:space-between;margin-bottom:4px">'+
+        '<span style="color:#aaa;font-size:12px">'+c+' '+label+'</span>'+
+        '<span style="color:#ccc;font-size:12px;font-family:\'Share Tech Mono\',monospace">'+catMap[c].toLocaleString()+'<span style="color:#888;font-size:11px;margin-left:5px">'+cpct+'%</span></span>'+
+      '</div>'+
+      '<div style="background:rgba(255,255,255,.1);border-radius:4px;height:5px;overflow:hidden">'+
+        '<div style="width:'+cpct+'%;height:100%;background:#FFD700;border-radius:4px"></div>'+
+      '</div>'+
+    '</div>';
   }).join('');
   var budgetHtml='';
   if(trip.budget){
