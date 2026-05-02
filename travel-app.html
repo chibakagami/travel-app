@@ -27,6 +27,8 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--light);color:var(--d
 .home-divider{width:50px;height:4px;background:#1a1a1a;border-radius:2px;margin-bottom:4px;}
 .btn-home{width:100%;max-width:320px;border:none;border-radius:14px;padding:18px 20px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;display:flex;align-items:center;gap:14px;text-align:left;}
 .btn-home-new{background:#CC0000;color:white;box-shadow:0 4px 0 #990000;}
+.btn-home-cont{background:#1a1a1a;color:white;box-shadow:0 4px 0 #000;}
+.btn-home-cont:disabled{background:#aaa;box-shadow:0 4px 0 #888;cursor:not-allowed;}
 .btn-home-mem{background:#FFD700;color:#1a1a1a;box-shadow:0 4px 0 #CC9900;}
 .btn-home-icon{font-size:28px;flex-shrink:0;}
 .btn-home-label{font-size:16px;font-weight:700;}
@@ -252,11 +254,18 @@ select.field-input option{background:#880000;color:white;}
   </div>
   <div class="home-bottom">
     <div class="home-divider"></div>
-    <button class="btn-home btn-home-new" onclick="showSetup()">
+    <button class="btn-home btn-home-new" onclick="startAdventure()">
       <span class="btn-home-icon">🗺️</span>
       <div>
-        <div class="btn-home-label">新增旅行計畫</div>
-        <div class="btn-home-sub">開始規劃新的冒險旅程</div>
+        <div class="btn-home-label">冒險開始</div>
+        <div class="btn-home-sub">開始規劃新的旅行計畫</div>
+      </div>
+    </button>
+    <button class="btn-home btn-home-cont" id="btn-continue" onclick="continueAdventure()">
+      <span class="btn-home-icon">🧭</span>
+      <div>
+        <div class="btn-home-label">繼續冒險</div>
+        <div class="btn-home-sub" id="btn-continue-sub">沒有進行中的旅程</div>
       </div>
     </button>
     <button class="btn-home btn-home-mem" onclick="showMemories()">
@@ -356,6 +365,15 @@ select.field-input option{background:#880000;color:white;}
       </div>
       <div class="exp-day-tabs" id="exp-day-tabs"></div>
     </div>
+    <!-- 帳務總覽 -->
+    <div id="exp-summary-bar" onclick="toggleExpSummary()" style="display:flex;align-items:center;justify-content:space-between;background:#2a2a2a;padding:12px 16px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.08)">
+      <span style="font-size:13px;color:#FFD700;font-weight:700">📊 帳務總覽</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span id="exp-summary-total-bar" style="font-size:13px;color:white;font-family:'Share Tech Mono',monospace"></span>
+        <span id="exp-summary-chevron" style="font-size:11px;color:#888;transition:transform .2s">▼</span>
+      </div>
+    </div>
+    <div id="exp-summary-panel" style="display:none;background:#222;padding:12px 16px;border-bottom:2px solid #CC0000"></div>
     <!-- Category filter -->
     <div class="exp-cat-filter" id="exp-cat-filter"></div>
     <!-- Expense list for selected day -->
@@ -523,6 +541,7 @@ function showHome(){
     var el=document.getElementById(id);if(el)el.style.display='none';
   });
   document.getElementById('home-screen').style.display='flex';
+  updateHomeButtons();
 }
 function showSetup(){
   document.getElementById('home-screen').style.display='none';
@@ -532,6 +551,42 @@ function showMemories(){
   document.getElementById('home-screen').style.display='none';
   document.getElementById('memories-screen').style.display='flex';
   renderMemories();
+}
+function updateHomeButtons(){
+  var btn=document.getElementById('btn-continue');
+  var sub=document.getElementById('btn-continue-sub');
+  if(!btn)return;
+  var has=!!(trip&&trip.dest);
+  btn.disabled=!has;
+  btn.style.opacity=has?'1':'0.45';
+  if(sub)sub.textContent=has?('繼續：'+trip.dest):'沒有進行中的旅程';
+}
+function startAdventure(){
+  if(trip&&trip.dest){
+    var ans=confirm('前次旅行「'+trip.dest+'」尚未完成\n\n確定 → 封存至美好回憶，開始新旅行\n取消 → 繼續編輯前次旅行');
+    if(ans){archiveCurrentToMemory();clearTripData();showSetup();}
+    else{showApp();renderAll();if(!exchangeRate)fetchRate(trip.currency);}
+  } else {
+    showSetup();
+  }
+}
+function continueAdventure(){
+  if(!trip||!trip.dest)return;
+  showApp();renderAll();if(!exchangeRate)fetchRate(trip.currency);
+}
+function archiveCurrentToMemory(){
+  if(!trip.dest)return;
+  memories.push({id:Date.now(),archivedAt:new Date().toISOString().split('T')[0],
+    trip:JSON.parse(JSON.stringify(trip)),planItems:JSON.parse(JSON.stringify(planItems)),
+    transports:JSON.parse(JSON.stringify(transports)),flights:JSON.parse(JSON.stringify(flights)),
+    expenses:JSON.parse(JSON.stringify(expenses)),dayStartTimes:JSON.parse(JSON.stringify(dayStartTimes))});
+  saveMemories();
+}
+function clearTripData(){
+  trip={dest:'',startDate:'',endDate:'',currency:'JPY',days:[]};
+  planItems=[];transports=[];flights=[];expenses=[];dayStartTimes={};
+  currentDay=0;exchangeRate=null;_id=1;editMode=false;
+  ['tv_trip','tv_plans','tv_tc','tv_flights','tv_exp','tv_id','tv_dst'].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
 }
 
 /* ── MEMORIES ── */
@@ -600,11 +655,11 @@ function renderMemViewBody(mem){
   var dayItems=mem.planItems.filter(function(p){return p.dayIdx===memViewDay;}).sort(function(a,b){return a.order-b.order;});
   var firstMin=df.length?t2m(df[df.length-1].arrTime):(mem.dayStartTimes&&mem.dayStartTimes[memViewDay]!=null?mem.dayStartTimes[memViewDay]:9*60);
   var curMin=firstMin;
-  var tlHtml=dayItems.map(function(item){
+  var tlHtml='';
+  dayItems.forEach(function(item,idx){
     var st=m2t(curMin),endMin=item.stay?curMin+item.stay:null;
     var tc=null;for(var i=0;i<mem.transports.length;i++){if(mem.transports[i].dayIdx===memViewDay&&mem.transports[i].afterItemId===item.id){tc=mem.transports[i];break;}}
-    if(endMin!=null)curMin=endMin;if(tc&&tc.durMin)curMin+=tc.durMin;
-    return'<div style="background:white;border-radius:14px;padding:12px 14px;box-shadow:0 2px 8px rgba(0,0,0,.08);display:flex;gap:10px;margin-bottom:6px;border-left:4px solid #CC0000">'+
+    tlHtml+='<div style="background:white;border-radius:14px;padding:12px 14px;box-shadow:0 2px 8px rgba(0,0,0,.08);display:flex;gap:10px;border-left:4px solid #CC0000">'+
       '<div style="min-width:44px;text-align:center"><div style="font-size:13px;font-weight:700;color:#CC0000">'+st+'</div>'+
       (endMin?'<div style="font-size:11px;color:#555;opacity:.65">↓'+m2t(endMin)+'</div>':'')+
       '</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600">'+item.name+'</div>'+
@@ -613,7 +668,20 @@ function renderMemViewBody(mem){
         '<span style="background:#FFE082;color:#7B5800;font-size:11px;padding:2px 8px;border-radius:20px">'+item.cat+'</span>'+
         (item.stay?'<span style="background:rgba(204,0,0,.1);color:#CC0000;font-size:11px;padding:2px 8px;border-radius:20px">⏱ '+stayTxt(item.stay)+'</span>':'')+
       '</div></div></div>';
-  }).join('');
+    if(endMin!=null)curMin=endMin;
+    if(tc&&tc.durMin)curMin+=tc.durMin;
+    var isLast=idx===dayItems.length-1;
+    if(!isLast||tc){
+      var mode=MODES[0];if(tc){for(var k=0;k<MODES.length;k++){if(MODES[k].key===tc.mode){mode=MODES[k];break;}}}
+      tlHtml+='<div style="display:flex;align-items:center;gap:8px;padding:2px 0 2px 20px">'+
+        '<div style="width:2px;background:#FFE082;height:22px;flex-shrink:0"></div>'+
+        '<span style="font-size:13px">'+mode.icon+'</span>'+
+        '<span style="font-size:12px;color:#888">'+mode.label+(tc&&tc.durMin?' · '+durTxt(tc.durMin):'')+'</span>'+
+      '</div>';
+    } else {
+      tlHtml+='<div style="height:8px"></div>';
+    }
+  });
   if(!df.length&&!dayItems.length)tlHtml='<div style="text-align:center;padding:32px;color:#aaa">📝 無行程記錄</div>';
   var dayExp=mem.expenses.filter(function(e){return e.dayIdx===memViewDay;});
   var expHtml='';
@@ -1052,6 +1120,8 @@ function renderExpenses(){
       :'')+
     '</div>';
   }).join('');
+  updateSummaryBar();
+  if(expSummaryOpen)renderExpSummary();
 }
 function selectExpDay(i){expViewDay=i;expCatFilter=null;renderExpenses();}
 function setExpCatFilter(cat){expCatFilter=(cat==='全部')?null:cat;renderExpenses();}
@@ -1254,6 +1324,53 @@ function exportPDF(){
   else alert('請允許彈出視窗後重試');
 }
 
+/* ── EXPENSE SUMMARY ── */
+var expSummaryOpen=false;
+function toggleExpSummary(){
+  expSummaryOpen=!expSummaryOpen;
+  var panel=document.getElementById('exp-summary-panel');
+  var chevron=document.getElementById('exp-summary-chevron');
+  if(panel)panel.style.display=expSummaryOpen?'block':'none';
+  if(chevron)chevron.style.transform=expSummaryOpen?'rotate(180deg)':'rotate(0deg)';
+  if(expSummaryOpen)renderExpSummary();
+}
+function renderExpSummary(){
+  var panel=document.getElementById('exp-summary-panel');if(!panel)return;
+  if(!expenses.length){panel.innerHTML='<div style="color:#888;font-size:13px;text-align:center;padding:8px">尚無記帳資料</div>';return;}
+  var grandTotal=expenses.reduce(function(s,e){return s+e.amount;},0);
+  var grandTwd=exchangeRate?Math.round(grandTotal*exchangeRate):null;
+  // per-day totals
+  var dayRows=trip.days.map(function(d,i){
+    var s=expenses.filter(function(e){return e.dayIdx===i;}).reduce(function(a,e){return a+e.amount;},0);
+    return s?'<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.06)">'+
+      '<span style="color:#aaa;font-size:12px">'+d.label+' '+d.date+'</span>'+
+      '<span style="color:#FFD700;font-size:12px;font-family:\'Share Tech Mono\',monospace">'+s.toLocaleString()+'</span></div>':'';
+  }).join('');
+  // per-category
+  var catMap={};
+  expenses.forEach(function(e){catMap[e.cat]=(catMap[e.cat]||0)+e.amount;});
+  var catRows=Object.keys(catMap).sort(function(a,b){return catMap[b]-catMap[a];}).map(function(c){
+    return'<div style="display:flex;justify-content:space-between;padding:3px 0">'+
+      '<span style="color:#aaa;font-size:12px">'+c+'</span>'+
+      '<span style="color:#ccc;font-size:12px;font-family:\'Share Tech Mono\',monospace">'+catMap[c].toLocaleString()+'</span></div>';
+  }).join('');
+  panel.innerHTML=
+    '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">'+
+      '<span style="color:#FFD700;font-size:11px;font-weight:700;letter-spacing:.08em">全程總花費</span>'+
+      '<div style="text-align:right">'+
+        '<div style="font-size:20px;font-weight:700;color:white;font-family:\'Share Tech Mono\',monospace">'+grandTotal.toLocaleString()+' <span style="font-size:12px;opacity:.6">'+trip.currency+'</span></div>'+
+        (grandTwd?'<div style="font-size:11px;color:#888;margin-top:1px">≈ NT$ '+grandTwd.toLocaleString()+'</div>':'')+
+      '</div></div>'+
+    '<div style="margin-bottom:8px">'+dayRows+'</div>'+
+    '<div style="border-top:1px solid rgba(255,255,255,.1);padding-top:8px">'+catRows+'</div>';
+}
+function updateSummaryBar(){
+  var bar=document.getElementById('exp-summary-total-bar');if(!bar)return;
+  var tot=expenses.reduce(function(s,e){return s+e.amount;},0);
+  var cur=trip.currency||'';
+  bar.textContent=tot?tot.toLocaleString()+' '+cur:'';
+}
+
 /* ── MISC ── */
 function switchTab(tab,btn){
   document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');});
@@ -1300,12 +1417,12 @@ function resetTrip(){
 
 /* ── INIT ── */
 loadMemories();
+loadData();
 var today=new Date().toISOString().split('T')[0];
 document.getElementById('start-date').value=today;
 var nx=new Date();nx.setDate(nx.getDate()+6);
 document.getElementById('end-date').value=nx.toISOString().split('T')[0];
-if(loadData()&&trip.dest){showApp();renderAll();fetchRate(trip.currency);}
-else{showHome();}
+showHome();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(function(){});
 </script>
 </body>
