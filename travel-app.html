@@ -259,6 +259,7 @@ select.field-input option{background:#880000;color:white;}
 .map-pin-banner.show{display:flex;}
 .pin-set-btn{font-size:11px;padding:3px 8px;background:rgba(59,76,202,.12);border:1px solid rgba(59,76,202,.25);color:#3B4CCA;border-radius:6px;cursor:pointer;margin-top:6px;font-family:'Noto Sans TC',sans-serif;}
 .pin-remove-btn{font-size:11px;padding:3px 8px;background:rgba(204,0,0,.1);border:1px solid rgba(204,0,0,.2);color:#CC0000;border-radius:6px;cursor:pointer;margin-top:6px;font-family:'Noto Sans TC',sans-serif;}
+.map-tc-label{background:white;border:1.5px solid #ddd;border-radius:20px;padding:2px 8px;font-size:11px;font-family:'Noto Sans TC',sans-serif;color:#333;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.15);text-align:center;line-height:1.4;}
 </style>
 </head>
 <body>
@@ -1870,19 +1871,62 @@ function renderMapDayTabs(){
 function selectMapDay(i){
   mapViewDay=i;renderMapDayTabs();renderMapPins();
 }
+var MAP_MODE_COLORS={walk:'#4CAF50',metro:'#3F51B5',bus:'#FF9800',taxi:'#F9A825',car:'#795548',bike:'#E91E63',train:'#2196F3',ship:'#9E9E9E'};
+function bezierPts(a,b){
+  var mlat=(a[0]+b[0])/2,mlng=(a[1]+b[1])/2;
+  var dlat=b[0]-a[0],dlng=b[1]-a[1];
+  var len=Math.sqrt(dlat*dlat+dlng*dlng);
+  var off=len*0.18;
+  var clat=mlat+(len>0.0001?-dlng*off/len:0);
+  var clng=mlng+(len>0.0001?dlat*off/len:0);
+  var pts=[];
+  for(var i=0;i<=20;i++){var t=i/20;var u=1-t;pts.push([u*u*a[0]+2*u*t*clat+t*t*b[0],u*u*a[1]+2*u*t*clng+t*t*b[1]]);}
+  return pts;
+}
 function renderMapPins(){
   if(!mapInstance)return;
   mapMarkers.forEach(function(m){m.remove();});mapMarkers=[];
   var items=computeTimes(mapViewDay);
+  var pinnedItems=[];
   var bounds=[];
   items.forEach(function(item,idx){
     var pi=planItems.filter(function(p){return p.id===item.id;})[0];
-    if(!pi||pi.lat==null)return;
-    var marker=L.marker([pi.lat,pi.lng]);
+    if(!pi||pi.lat==null){pinnedItems.push(null);return;}
+    var icon=L.divIcon({
+      className:'',
+      html:'<div style="background:#CC0000;color:white;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.35)">'+(idx+1)+'</div>',
+      iconSize:[26,26],iconAnchor:[13,13]
+    });
+    var marker=L.marker([pi.lat,pi.lng],{icon:icon});
     marker.bindPopup('<b>'+(idx+1)+'. '+escHtml(item.name)+'</b><br>'+m2t(item.startMin)+(item.endMin?'–'+m2t(item.endMin):'')+'<br><small>'+escHtml(item.cat)+'</small>');
     marker.addTo(mapInstance);mapMarkers.push(marker);
     bounds.push([pi.lat,pi.lng]);
+    pinnedItems.push({item:item,pi:pi});
   });
+  /* transport lines between consecutive pinned items */
+  for(var i=0;i<pinnedItems.length-1;i++){
+    var from=pinnedItems[i],to=pinnedItems[i+1];
+    if(!from||!to)continue;
+    var tc=getTcForDay(from.item.id,mapViewDay);
+    var mode=tc?tc.mode:'walk';
+    var color=MAP_MODE_COLORS[mode]||'#9E9E9E';
+    var modeObj=MODES.filter(function(m){return m.key===mode;})[0]||MODES[0];
+    var pts=bezierPts([from.pi.lat,from.pi.lng],[to.pi.lat,to.pi.lng]);
+    var line=L.polyline(pts,{color:color,weight:3,dashArray:'7,6',opacity:.8});
+    line.addTo(mapInstance);mapMarkers.push(line);
+    /* midpoint label */
+    var mid=pts[Math.floor(pts.length/2)];
+    var durLabel=tc&&tc.durMin?durTxt(tc.durMin):'';
+    var labelMarker=L.marker(mid,{
+      icon:L.divIcon({
+        className:'',
+        html:'<div class="map-tc-label">'+modeObj.icon+(durLabel?' '+durLabel:'')+'</div>',
+        iconSize:null,iconAnchor:[0,10]
+      }),
+      interactive:false
+    });
+    labelMarker.addTo(mapInstance);mapMarkers.push(labelMarker);
+  }
   if(bounds.length===1)mapInstance.setView(bounds[0],15);
   else if(bounds.length>1)mapInstance.fitBounds(bounds,{padding:[40,40]});
 }
