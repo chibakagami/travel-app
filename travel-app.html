@@ -8,38 +8,56 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="旅行計畫">
-<meta name="theme-color" content="#C8703A">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Playfair+Display:wght@600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#CC0000">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
-:root{--sand:#F5ECD7;--warm:#E8D5B0;--terracotta:#C8703A;--terra-dark:#9E4E22;--deep:#2C2416;--mid:#6B5744;--light:#FAF6EE;--red:#C0392B;--blue:#1a6b8a;--shadow:0 4px 20px rgba(44,36,22,0.12);--radius:16px;}
+:root{--sand:#FFF9C4;--warm:#FFE082;--terracotta:#CC0000;--terra-dark:#990000;--deep:#1a1a1a;--mid:#555;--light:#FFF9F0;--red:#CC0000;--blue:#3B4CCA;--shadow:0 4px 20px rgba(0,0,0,0.13);--radius:16px;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Noto Sans TC',sans-serif;background:var(--light);color:var(--deep);min-height:100vh;max-width:480px;margin:0 auto;}
+/* HOME */
+#home-screen{min-height:100vh;display:flex;flex-direction:column;overflow:hidden;background:#CC0000;}
+.home-top{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px 50px;}
+.pokeball{width:110px;height:110px;border-radius:50%;background:white;position:relative;border:5px solid #1a1a1a;margin-bottom:20px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.3);}
+.pokeball-top{position:absolute;top:0;left:0;right:0;height:50%;background:#CC0000;}
+.pokeball-belt{position:absolute;left:0;right:0;top:50%;height:5px;background:#1a1a1a;transform:translateY(-50%);z-index:2;}
+.pokeball-btn{position:absolute;left:50%;top:50%;width:24px;height:24px;background:white;border:5px solid #1a1a1a;border-radius:50%;transform:translate(-50%,-50%);z-index:3;}
+.home-title{font-family:'Press Start 2P',monospace;color:white;font-size:14px;text-align:center;line-height:2;text-shadow:3px 3px 0 rgba(0,0,0,.3);}
+.home-sub{color:rgba(255,255,255,.7);font-size:13px;margin-top:8px;}
+.home-bottom{background:white;border-radius:32px 32px 0 0;padding:36px 24px 48px;display:flex;flex-direction:column;align-items:center;gap:14px;}
+.home-divider{width:50px;height:4px;background:#1a1a1a;border-radius:2px;margin-bottom:4px;}
+.btn-home{width:100%;max-width:320px;border:none;border-radius:14px;padding:18px 20px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;display:flex;align-items:center;gap:14px;text-align:left;}
+.btn-home-new{background:#CC0000;color:white;box-shadow:0 4px 0 #990000;}
+.btn-home-mem{background:#FFD700;color:#1a1a1a;box-shadow:0 4px 0 #CC9900;}
+.btn-home-icon{font-size:28px;flex-shrink:0;}
+.btn-home-label{font-size:16px;font-weight:700;}
+.btn-home-sub{font-size:11px;opacity:.7;margin-top:2px;}
 /* SETUP */
-#setup-screen{min-height:100vh;background:linear-gradient(160deg,#2C2416 0%,#6B3A1F 50%,#C8703A 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;position:relative;overflow:hidden;}
-#setup-screen::before{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,0.04);top:-80px;right:-80px;}
-#setup-screen::after{content:'';position:absolute;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.04);bottom:40px;left:-60px;}
-.setup-title{font-family:'Playfair Display',serif;color:var(--sand);font-size:36px;text-align:center;margin-bottom:8px;position:relative;z-index:1;}
-.setup-sub{color:rgba(245,236,215,0.6);font-size:14px;text-align:center;margin-bottom:40px;position:relative;z-index:1;}
-.setup-card{background:rgba(255,255,255,0.1);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.15);border-radius:24px;padding:28px 24px;width:100%;position:relative;z-index:1;}
+#setup-screen{min-height:100vh;background:#CC0000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;position:relative;overflow:hidden;}
+#setup-screen::before{content:'';position:absolute;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.06);top:-60px;right:-60px;}
+.setup-back{position:absolute;top:16px;left:16px;background:rgba(255,255,255,.15);border:none;border-radius:10px;color:white;padding:8px 14px;font-family:'Noto Sans TC',sans-serif;font-size:13px;cursor:pointer;z-index:2;}
+.setup-title{font-family:'Press Start 2P',monospace;color:white;font-size:12px;text-align:center;margin-bottom:6px;position:relative;z-index:1;line-height:2;text-shadow:2px 2px 0 rgba(0,0,0,.25);}
+.setup-sub{color:rgba(255,255,255,0.65);font-size:13px;text-align:center;margin-bottom:28px;position:relative;z-index:1;}
+.setup-card{background:rgba(255,255,255,0.12);backdrop-filter:blur(12px);border:2px solid rgba(255,255,255,0.2);border-radius:24px;padding:28px 24px;width:100%;position:relative;z-index:1;}
 .field-group{margin-bottom:20px;}
-.field-label{color:rgba(245,236,215,0.8);font-size:12px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;display:block;}
-.field-input{width:100%;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:12px;color:var(--sand);font-family:'Noto Sans TC',sans-serif;font-size:15px;padding:12px 16px;outline:none;}
-.field-input::placeholder{color:rgba(245,236,215,0.35);}
+.field-label{color:rgba(255,255,255,0.85);font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;display:block;}
+.field-input{width:100%;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.25);border-radius:12px;color:white;font-family:'Noto Sans TC',sans-serif;font-size:15px;padding:12px 16px;outline:none;}
+.field-input::placeholder{color:rgba(255,255,255,0.4);}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-select.field-input option{background:#3a2a1a;color:#f5ecd7;}
-.btn-start{width:100%;background:var(--terracotta);color:white;border:none;border-radius:14px;padding:16px;font-family:'Noto Sans TC',sans-serif;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;}
+select.field-input option{background:#880000;color:white;}
+.btn-start{width:100%;background:#FFD700;color:#1a1a1a;border:none;border-radius:14px;padding:16px;font-family:'Noto Sans TC',sans-serif;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;box-shadow:0 4px 0 #CC9900;}
 /* APP */
 #app{display:none;flex-direction:column;min-height:100vh;}
-.app-header{background:var(--deep);padding:14px 16px 10px;position:sticky;top:0;z-index:100;}
+.app-header{background:#CC0000;padding:14px 16px 10px;position:sticky;top:0;z-index:100;border-bottom:3px solid #990000;}
 .header-top{display:flex;justify-content:space-between;align-items:flex-start;}
-.trip-name{font-family:'Playfair Display',serif;font-size:20px;color:var(--sand);}
-.trip-dates{font-size:11px;color:rgba(245,236,215,0.55);margin-top:2px;}
-.header-btns{display:flex;gap:5px;}
-.header-btn{background:rgba(255,255,255,0.08);border:none;border-radius:8px;color:rgba(245,236,215,0.7);font-size:11px;padding:5px 8px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;white-space:nowrap;}
-.header-btn.edit-on{background:rgba(200,112,58,0.35);color:#ffd9b8;}
-.tab-bar{background:var(--deep);display:flex;border-top:1px solid rgba(255,255,255,0.08);padding:0 4px 4px;position:sticky;bottom:0;z-index:100;order:10;}
-.tab-btn{flex:1;background:none;border:none;color:rgba(245,236,215,0.4);font-family:'Noto Sans TC',sans-serif;font-size:11px;padding:10px 4px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;}
-.tab-btn.active{color:var(--terracotta);}
+.trip-name{font-family:'Press Start 2P',monospace;font-size:11px;color:white;line-height:1.7;text-shadow:1px 1px 0 rgba(0,0,0,.3);}
+.trip-dates{font-size:11px;color:rgba(255,255,255,0.65);margin-top:4px;}
+.header-btns{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;}
+.header-btn{background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.25);border-radius:8px;color:white;font-size:11px;padding:5px 8px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;white-space:nowrap;}
+.header-btn.edit-on{background:#FFD700;color:#1a1a1a;border-color:#FFD700;}
+.header-btn-mem{background:#FFD700;color:#1a1a1a;border-color:#FFD700;font-weight:700;}
+.tab-bar{background:#1a1a1a;display:flex;border-top:3px solid #CC0000;padding:0 4px 4px;position:sticky;bottom:0;z-index:100;order:10;}
+.tab-btn{flex:1;background:none;border:none;color:rgba(255,255,255,0.4);font-family:'Noto Sans TC',sans-serif;font-size:11px;padding:10px 4px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.tab-btn.active{color:#FFD700;}
 .tab-icon{font-size:20px;line-height:1;}
 .tab-content{display:none;flex:1;padding:16px;}
 .tab-content.active{display:block;}
@@ -47,8 +65,8 @@ select.field-input option{background:#3a2a1a;color:#f5ecd7;}
 .day-tabs-wrap{overflow-x:auto;margin:0 -16px;padding:0 16px;scrollbar-width:none;margin-bottom:16px;}
 .day-tabs-wrap::-webkit-scrollbar{display:none;}
 .day-tabs{display:flex;gap:8px;white-space:nowrap;padding-bottom:4px;}
-.day-tab{background:white;border:2px solid var(--warm);border-radius:10px;color:var(--mid);font-family:'Noto Sans TC',sans-serif;font-size:13px;padding:7px 14px;cursor:pointer;flex-shrink:0;}
-.day-tab.active{background:var(--terracotta);border-color:var(--terracotta);color:white;font-weight:600;}
+.day-tab{background:white;border:2px solid #FFE082;border-radius:10px;color:var(--mid);font-family:'Noto Sans TC',sans-serif;font-size:13px;padding:7px 14px;cursor:pointer;flex-shrink:0;}
+.day-tab.active{background:#CC0000;border-color:#CC0000;color:white;font-weight:700;}
 /* BOARDING PASS */
 .boarding-pass{position:relative;margin-bottom:16px;filter:drop-shadow(0 6px 18px rgba(26,90,120,0.3));}
 .bp-main{background:linear-gradient(135deg,#0f4c75 0%,#1b6ca8 45%,#2196c4 100%);border-radius:16px 16px 0 0;padding:18px 20px 16px;color:white;}
@@ -95,33 +113,33 @@ select.field-input option{background:#3a2a1a;color:#f5ecd7;}
 .flight-form.open{display:block;}
 /* TIMELINE */
 .plan-timeline{display:flex;flex-direction:column;margin-bottom:16px;}
-.plan-item{background:white;border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:flex-start;}
+.plan-item{background:white;border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:flex-start;border-left:4px solid #CC0000;}
 .plan-time-col{min-width:48px;display:flex;flex-direction:column;align-items:center;}
-.plan-time{font-size:13px;font-weight:700;color:var(--terracotta);}
+.plan-time{font-size:13px;font-weight:700;color:#CC0000;}
 .plan-end-time{font-size:11px;color:var(--mid);opacity:.65;margin-top:2px;}
 .plan-body{flex:1;min-width:0;}
 .plan-name{font-size:15px;font-weight:600;color:var(--deep);margin-bottom:4px;}
 .plan-note-txt{font-size:12px;color:var(--mid);line-height:1.4;margin-bottom:4px;}
 .plan-tags{display:flex;flex-wrap:wrap;gap:6px;}
 .tag{font-size:11px;padding:2px 8px;border-radius:20px;}
-.tag-cat{background:var(--warm);color:var(--mid);}
-.tag-stay{background:rgba(200,112,58,.1);color:var(--terracotta);}
+.tag-cat{background:#FFE082;color:#7B5800;}
+.tag-stay{background:rgba(204,0,0,.1);color:#CC0000;}
 .plan-actions{display:flex;gap:4px;flex-shrink:0;}
-.plan-edit-btn{background:rgba(200,112,58,.1);border:none;color:var(--terracotta);font-size:13px;cursor:pointer;padding:3px 7px;border-radius:6px;line-height:1;}
+.plan-edit-btn{background:rgba(204,0,0,.1);border:none;color:#CC0000;font-size:13px;cursor:pointer;padding:3px 7px;border-radius:6px;line-height:1;}
 .plan-del{background:none;border:none;color:#ccc;font-size:16px;cursor:pointer;padding:2px 4px;line-height:1;}
-.plan-edit-panel{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--warm);}
+.plan-edit-panel{display:none;margin-top:12px;padding-top:12px;border-top:1px solid #FFE082;}
 .plan-edit-panel.open{display:block;}
 .edit-field-label{font-size:11px;color:var(--mid);margin-bottom:4px;font-weight:600;}
-.edit-input{width:100%;border:1.5px solid var(--warm);border-radius:8px;padding:8px 10px;font-family:'Noto Sans TC',sans-serif;font-size:13px;color:var(--deep);outline:none;background:var(--light);margin-bottom:8px;}
-.edit-input:focus{border-color:var(--terracotta);}
+.edit-input{width:100%;border:2px solid #FFE082;border-radius:8px;padding:8px 10px;font-family:'Noto Sans TC',sans-serif;font-size:13px;color:var(--deep);outline:none;background:var(--light);margin-bottom:8px;}
+.edit-input:focus{border-color:#CC0000;}
 .edit-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
-.btn-save-edit{width:100%;background:var(--terracotta);color:white;border:none;border-radius:8px;padding:9px;font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
+.btn-save-edit{width:100%;background:#CC0000;color:white;border:none;border-radius:8px;padding:9px;font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
 /* TRANSPORT CONNECTOR */
 .tc-wrap{display:flex;align-items:stretch;}
 .tc-spine{width:48px;display:flex;flex-direction:column;align-items:center;flex-shrink:0;}
-.tc-vline{width:2px;background:var(--warm);flex:1;min-height:10px;}
-.tc-circle{width:10px;height:10px;border-radius:50%;background:white;border:2px solid var(--warm);flex-shrink:0;}
-.tc-card{flex:1;margin:4px 0;background:white;border-radius:12px;border:1.5px solid var(--warm);box-shadow:0 2px 8px rgba(44,36,22,.06);overflow:hidden;}
+.tc-vline{width:2px;background:#FFE082;flex:1;min-height:10px;}
+.tc-circle{width:10px;height:10px;border-radius:50%;background:white;border:2px solid #FFE082;flex-shrink:0;}
+.tc-card{flex:1;margin:4px 0;background:white;border-radius:12px;border:2px solid #FFE082;box-shadow:0 2px 8px rgba(0,0,0,.06);overflow:hidden;}
 .tc-summary{display:flex;align-items:center;gap:10px;padding:10px 14px;}
 .tc-summary.clickable{cursor:pointer;}
 .tc-icon-big{font-size:20px;}
@@ -130,40 +148,40 @@ select.field-input option{background:#3a2a1a;color:#f5ecd7;}
 .tc-dur-label{font-size:11px;color:var(--mid);margin-top:1px;}
 .tc-chevron{font-size:11px;color:var(--mid);transition:transform .2s;display:inline-block;}
 .tc-chevron.open{transform:rotate(180deg);}
-.tc-panel{display:none;padding:12px 14px 14px;border-top:1px solid var(--warm);}
+.tc-panel{display:none;padding:12px 14px 14px;border-top:1px solid #FFE082;}
 .tc-panel.open{display:block;}
 .tc-panel-title{font-size:11px;font-weight:600;color:var(--mid);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;}
 .tc-mode-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
-.tc-mode-btn{background:var(--light);border:1.5px solid var(--warm);border-radius:10px;padding:8px 4px;text-align:center;cursor:pointer;font-family:'Noto Sans TC',sans-serif;}
+.tc-mode-btn{background:var(--light);border:2px solid #FFE082;border-radius:10px;padding:8px 4px;text-align:center;cursor:pointer;font-family:'Noto Sans TC',sans-serif;}
 .tc-mode-btn .tm-icon{font-size:20px;display:block;margin-bottom:3px;}
 .tc-mode-btn .tm-label{font-size:10px;color:var(--mid);}
-.tc-mode-btn.sel{background:var(--terracotta);border-color:var(--terracotta);}
+.tc-mode-btn.sel{background:#CC0000;border-color:#CC0000;}
 .tc-mode-btn.sel .tm-label{color:white;}
-.tc-done-btn{width:100%;background:var(--terracotta);color:white;border:none;border-radius:10px;padding:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Noto Sans TC',sans-serif;margin-top:8px;}
+.tc-done-btn{width:100%;background:#CC0000;color:white;border:none;border-radius:10px;padding:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Noto Sans TC',sans-serif;margin-top:8px;}
 /* DRUM PICKER */
 .drum-group{display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;}
 .drum-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
 .drum-col-label{font-size:11px;color:var(--mid);font-weight:600;}
-.drum{width:100%;height:96px;overflow:hidden;position:relative;border:1.5px solid var(--warm);border-radius:10px;background:var(--light);cursor:ns-resize;}
+.drum{width:100%;height:96px;overflow:hidden;position:relative;border:2px solid #FFE082;border-radius:10px;background:var(--light);cursor:ns-resize;}
 .drum-inner{display:flex;flex-direction:column;}
 .drum-item{height:32px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:var(--mid);user-select:none;flex-shrink:0;}
-.drum-item.sel{color:var(--terracotta);font-size:17px;}
+.drum-item.sel{color:#CC0000;font-size:17px;}
 .drum::before,.drum::after{content:'';position:absolute;left:0;right:0;height:32px;z-index:2;pointer-events:none;}
 .drum::before{top:0;background:linear-gradient(to bottom,var(--light) 30%,transparent);}
 .drum::after{bottom:0;background:linear-gradient(to top,var(--light) 30%,transparent);}
-.drum-sel-bar{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:32px;background:rgba(200,112,58,.08);border-top:1.5px solid rgba(200,112,58,.4);border-bottom:1.5px solid rgba(200,112,58,.4);pointer-events:none;z-index:1;}
+.drum-sel-bar{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:32px;background:rgba(204,0,0,.08);border-top:1.5px solid rgba(204,0,0,.4);border-bottom:1.5px solid rgba(204,0,0,.4);pointer-events:none;z-index:1;}
 /* ADD FORM */
-.add-card{background:white;border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:16px;}
-.add-card h3{font-size:14px;font-weight:600;color:var(--mid);margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em;}
+.add-card{background:white;border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:16px;border:2px solid #FFE082;}
+.add-card h3{font-size:14px;font-weight:700;color:var(--mid);margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
-.form-input{width:100%;border:1.5px solid var(--warm);border-radius:10px;padding:10px 12px;font-family:'Noto Sans TC',sans-serif;font-size:14px;color:var(--deep);outline:none;background:var(--light);}
-.form-input:focus{border-color:var(--terracotta);}
-.btn-add{width:100%;background:var(--terracotta);color:white;border:none;border-radius:10px;padding:12px;font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:600;cursor:pointer;}
+.form-input{width:100%;border:2px solid #FFE082;border-radius:10px;padding:10px 12px;font-family:'Noto Sans TC',sans-serif;font-size:14px;color:var(--deep);outline:none;background:var(--light);}
+.form-input:focus{border-color:#CC0000;}
+.btn-add{width:100%;background:#CC0000;color:white;border:none;border-radius:10px;padding:12px;font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
 /* EXPENSE NEW LAYOUT */
 .exp-header{background:var(--deep);padding:16px 16px 0;color:var(--sand);}
 .exp-header-top{padding-bottom:12px;}
 .exp-day-label{font-size:12px;opacity:.6;margin-bottom:4px;}
-.exp-day-total{font-family:'Playfair Display',serif;font-size:36px;font-weight:700;line-height:1;}
+.exp-day-total{font-size:32px;font-weight:700;line-height:1;color:#FFD700;}
 .exp-day-twd{font-size:13px;opacity:.55;margin-top:4px;}
 .exp-rate{font-size:11px;opacity:.4;margin-top:2px;}
 .exp-day-tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:12px;}
@@ -171,35 +189,35 @@ select.field-input option{background:#3a2a1a;color:#f5ecd7;}
 .exp-day-tab{background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.15);border-radius:10px;color:rgba(245,236,215,.7);font-family:'Noto Sans TC',sans-serif;font-size:12px;padding:6px 12px;cursor:pointer;flex-shrink:0;white-space:nowrap;transition:all .2s;}
 .exp-day-tab.active{background:var(--terracotta);border-color:var(--terracotta);color:white;font-weight:600;}
 .exp-day-chip{background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.15);border-radius:12px;color:rgba(245,236,215,.7);font-family:'Noto Sans TC',sans-serif;font-size:12px;padding:8px 14px;cursor:pointer;flex-shrink:0;white-space:nowrap;text-align:center;transition:all .2s;}
-.exp-day-chip.active{background:var(--terracotta);border-color:var(--terracotta);color:white;font-weight:600;}
+.exp-day-chip.active{background:#FFD700;border-color:#FFD700;color:#1a1a1a;font-weight:700;}
 .edc-label{font-size:12px;font-weight:600;margin-bottom:2px;}
 .edc-amt{font-size:11px;opacity:.75;}
 .exp-cat-filter{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:12px 16px 4px;background:var(--light);}
 .exp-cat-filter::-webkit-scrollbar{display:none;}
-.exp-cat-chip{background:white;border:1.5px solid var(--warm);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--mid);cursor:pointer;white-space:nowrap;flex-shrink:0;}
-.exp-cat-chip.active{background:var(--terracotta);border-color:var(--terracotta);color:white;font-weight:600;}
+.exp-cat-chip{background:white;border:2px solid #FFE082;border-radius:20px;padding:5px 12px;font-size:12px;color:var(--mid);cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.exp-cat-chip.active{background:#CC0000;border-color:#CC0000;color:white;font-weight:700;}
 .expense-list{display:flex;flex-direction:column;gap:8px;padding:12px 16px 88px;}
-.expense-item{background:white;border-radius:12px;padding:12px 14px;box-shadow:0 2px 8px rgba(44,36,22,.07);display:flex;flex-direction:column;}
+.expense-item{background:white;border-radius:12px;padding:12px 14px;box-shadow:0 2px 8px rgba(0,0,0,.07);display:flex;flex-direction:column;border-left:4px solid #FFD700;}
 .exp-row{display:flex;align-items:center;gap:10px;}
-.expense-icon{width:36px;height:36px;border-radius:10px;background:var(--warm);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.expense-icon{width:36px;height:36px;border-radius:10px;background:#FFE082;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
 .expense-info{flex:1;min-width:0;}
 .expense-name{font-size:14px;font-weight:600;}
 .expense-day-tag{font-size:11px;color:var(--mid);}
-.expense-amount{font-size:15px;font-weight:700;color:var(--terracotta);white-space:nowrap;}
+.expense-amount{font-size:15px;font-weight:700;color:#CC0000;white-space:nowrap;}
 .expense-del{background:none;border:none;color:#ccc;font-size:16px;cursor:pointer;padding:2px;}
-.exp-edit-panel{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--warm);}
+.exp-edit-panel{display:none;margin-top:10px;padding-top:10px;border-top:1px solid #FFE082;}
 .exp-edit-panel.open{display:block;}
 /* FAB */
-.fab{position:fixed;bottom:80px;right:20px;width:52px;height:52px;border-radius:50%;background:var(--terracotta);color:white;border:none;font-size:26px;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(200,112,58,.45);z-index:50;line-height:1;}
+.fab{position:fixed;bottom:80px;right:20px;width:52px;height:52px;border-radius:50%;background:#CC0000;color:white;border:none;font-size:26px;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(204,0,0,.5);z-index:50;line-height:1;}
 .fab.show{display:flex;}
 /* ADD EXPENSE SHEET */
 .add-exp-sheet{background:white;border-radius:24px 24px 0 0;padding:20px 20px 40px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
 .exp-cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
-.exp-cat-item{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 6px;border:1.5px solid var(--warm);border-radius:12px;cursor:pointer;transition:all .15s;}
-.exp-cat-item.sel{border-color:var(--terracotta);background:rgba(200,112,58,.07);}
+.exp-cat-item{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 6px;border:2px solid #FFE082;border-radius:12px;cursor:pointer;transition:all .15s;}
+.exp-cat-item.sel{border-color:#CC0000;background:rgba(204,0,0,.07);}
 .exp-cat-item .eci{font-size:26px;line-height:1;}
 .exp-cat-item .ecl{font-size:11px;color:var(--mid);}
-.exp-cat-item.sel .ecl{color:var(--terracotta);font-weight:600;}
+.exp-cat-item.sel .ecl{color:#CC0000;font-weight:600;}
 #tab-expense .expense-list{padding:12px 16px;margin-bottom:80px;}
 #tab-expense .empty{padding:40px 16px;}
 /* MODAL */
@@ -208,7 +226,7 @@ select.field-input option{background:#3a2a1a;color:#f5ecd7;}
 .modal-sheet{background:white;border-radius:24px 24px 0 0;padding:20px 20px 40px;width:100%;max-width:480px;}
 .modal-handle{width:40px;height:4px;background:var(--warm);border-radius:2px;margin:0 auto 18px;}
 .modal-title{font-size:17px;font-weight:700;color:var(--deep);margin-bottom:16px;}
-.export-btn{width:100%;display:flex;align-items:center;gap:14px;background:var(--light);border:1.5px solid var(--warm);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;text-align:left;}
+.export-btn{width:100%;display:flex;align-items:center;gap:14px;background:var(--light);border:2px solid #FFE082;border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;text-align:left;}
 .export-btn-icon{font-size:28px;flex-shrink:0;}
 .export-btn-info .etitle{font-size:15px;font-weight:600;color:var(--deep);}
 .export-btn-info .edesc{font-size:12px;color:var(--mid);margin-top:2px;}
@@ -221,9 +239,40 @@ select.field-input option{background:#3a2a1a;color:#f5ecd7;}
 </head>
 <body>
 
+<!-- HOME SCREEN -->
+<div id="home-screen" style="display:none">
+  <div class="home-top">
+    <div class="pokeball">
+      <div class="pokeball-top"></div>
+      <div class="pokeball-belt"></div>
+      <div class="pokeball-btn"></div>
+    </div>
+    <div class="home-title">旅行計畫</div>
+    <div class="home-sub">冒險從這裡開始！</div>
+  </div>
+  <div class="home-bottom">
+    <div class="home-divider"></div>
+    <button class="btn-home btn-home-new" onclick="showSetup()">
+      <span class="btn-home-icon">🗺️</span>
+      <div>
+        <div class="btn-home-label">新增旅行計畫</div>
+        <div class="btn-home-sub">開始規劃新的冒險旅程</div>
+      </div>
+    </button>
+    <button class="btn-home btn-home-mem" onclick="showMemories()">
+      <span class="btn-home-icon">⭐</span>
+      <div>
+        <div class="btn-home-label">美好回憶</div>
+        <div class="btn-home-sub">回顧你的旅行紀錄</div>
+      </div>
+    </button>
+  </div>
+</div>
+
 <div id="setup-screen">
-  <div class="setup-title">✈ 旅行計畫</div>
-  <div class="setup-sub">規劃你的完美旅程</div>
+  <button class="setup-back" onclick="showHome()">← 返回</button>
+  <div class="setup-title">新增旅行計畫</div>
+  <div class="setup-sub">規劃你的完美冒險旅程</div>
   <div class="setup-card">
     <div class="field-group"><label class="field-label">目的地</label><input class="field-input" id="dest-input" placeholder="例：東京、首爾、曼谷"/></div>
     <div class="field-row">
@@ -237,7 +286,7 @@ select.field-input option{background:#3a2a1a;color:#f5ecd7;}
         <option value="SGD">SGD 新幣</option><option value="VND">VND 越南盾</option><option value="MYR">MYR 馬幣</option>
       </select>
     </div>
-    <button class="btn-start" onclick="startTrip()">開始規劃 →</button>
+    <button class="btn-start" onclick="startTrip()">開始冒險 ▶</button>
   </div>
 </div>
 
@@ -248,6 +297,7 @@ select.field-input option{background:#3a2a1a;color:#f5ecd7;}
       <div class="header-btns">
         <button class="header-btn" id="edit-btn" onclick="toggleEditMode()">✏️ 編輯</button>
         <button class="header-btn" onclick="openExportModal()">📤 匯出</button>
+        <button class="header-btn header-btn-mem" onclick="archiveMemory()">⭐ 保留回憶</button>
         <button class="header-btn" onclick="resetTrip()">重設</button>
       </div>
     </div>
@@ -321,6 +371,26 @@ select.field-input option{background:#3a2a1a;color:#f5ecd7;}
 </div>
 
 
+<!-- MEMORIES SCREEN -->
+<div id="memories-screen" style="display:none;min-height:100vh;flex-direction:column;background:var(--light)">
+  <div style="background:#CC0000;padding:16px;display:flex;align-items:center;gap:12px;border-bottom:3px solid #990000;position:sticky;top:0;z-index:100">
+    <button onclick="showHome()" style="background:rgba(255,255,255,.15);border:none;border-radius:10px;color:white;padding:8px 14px;font-family:'Noto Sans TC',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap">← 返回</button>
+    <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:white;line-height:1.7;text-shadow:1px 1px 0 rgba(0,0,0,.3)">⭐ 美好回憶</div>
+  </div>
+  <div id="mem-list" style="padding:16px;flex:1"></div>
+</div>
+
+<!-- MEMORY VIEW OVERLAY -->
+<div id="mem-view-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;flex-direction:column" onclick="if(event.target===this)closeMemView()">
+  <div style="background:var(--light);flex:1;overflow-y:auto;max-width:480px;width:100%;margin:0 auto;display:flex;flex-direction:column">
+    <div style="background:#CC0000;padding:16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;border-bottom:3px solid #990000">
+      <button onclick="closeMemView()" style="background:rgba(255,255,255,.15);border:none;border-radius:10px;color:white;padding:8px 12px;font-family:'Noto Sans TC',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap">✕ 關閉</button>
+      <div id="mem-view-title" style="font-family:'Press Start 2P',monospace;font-size:11px;color:white;line-height:1.7;flex:1"></div>
+    </div>
+    <div id="mem-view-body" style="padding:16px"></div>
+  </div>
+</div>
+
 <!-- ADD EXPENSE MODAL -->
 <div class="modal-overlay" id="add-exp-modal" onclick="if(event.target===this)closeAddExpModal()">
   <div class="add-exp-sheet">
@@ -365,8 +435,9 @@ select.field-input option{background:#3a2a1a;color:#f5ecd7;}
 
 <script>
 var trip={dest:'',startDate:'',endDate:'',currency:'JPY',days:[]};
-var planItems=[],transports=[],flights=[],expenses=[];
+var planItems=[],transports=[],flights=[],expenses=[],memories=[];
 var currentDay=0,exchangeRate=null;
+var memViewDay=0,currentMemId=null;
 var openTcId=null,openEditId=null,openBpEditId=null,openExpEditIdx=null;
 var editMode=false,_id=1;
 var expViewDay=0; // which day is selected in expense tab
@@ -446,6 +517,125 @@ function buildDurDrum(cid,initH,initM,cbH,cbM){
   Drum(document.getElementById(cid+'_m'),mins,Math.round(Math.min(initM,55)/5),function(i){cbM(i*5);});
 }
 
+/* ── SCREENS ── */
+function showHome(){
+  ['home-screen','setup-screen','app','memories-screen'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.style.display='none';
+  });
+  document.getElementById('home-screen').style.display='flex';
+}
+function showSetup(){
+  document.getElementById('home-screen').style.display='none';
+  document.getElementById('setup-screen').style.display='flex';
+}
+function showMemories(){
+  document.getElementById('home-screen').style.display='none';
+  document.getElementById('memories-screen').style.display='flex';
+  renderMemories();
+}
+
+/* ── MEMORIES ── */
+function archiveMemory(){
+  if(!trip.dest){alert('尚無行程可保留');return;}
+  if(!confirm('將此旅行計畫保留為美好回憶？'))return;
+  memories.push({id:Date.now(),archivedAt:new Date().toISOString().split('T')[0],
+    trip:JSON.parse(JSON.stringify(trip)),planItems:JSON.parse(JSON.stringify(planItems)),
+    transports:JSON.parse(JSON.stringify(transports)),flights:JSON.parse(JSON.stringify(flights)),
+    expenses:JSON.parse(JSON.stringify(expenses)),dayStartTimes:JSON.parse(JSON.stringify(dayStartTimes))});
+  saveMemories();alert('✅ 已保留為美好回憶！');
+}
+function renderMemories(){
+  var list=document.getElementById('mem-list');
+  if(!memories.length){
+    list.innerHTML='<div style="text-align:center;padding:60px 24px;color:#555"><div style="font-size:64px;margin-bottom:16px">🏆</div><div style="font-size:14px;line-height:1.8">還沒有回憶喔！<br>開始你的第一次冒險吧！</div></div>';
+    return;
+  }
+  list.innerHTML=[].concat(memories).reverse().map(function(m){
+    var days=m.trip.days?m.trip.days.length:0;
+    var cnt=m.planItems?m.planItems.length:0;
+    var tot=m.expenses?m.expenses.reduce(function(s,e){return s+e.amount;},0):0;
+    return'<div style="background:white;border-radius:16px;padding:16px;box-shadow:var(--shadow);border-left:5px solid #FFD700;cursor:pointer;position:relative;margin-bottom:12px" onclick="showMemView('+m.id+')">'+
+      '<button onclick="event.stopPropagation();delMemory('+m.id+')" style="position:absolute;top:12px;right:12px;background:none;border:none;color:#ccc;font-size:18px;cursor:pointer;padding:4px">✕</button>'+
+      '<div style="font-family:\'Press Start 2P\',monospace;font-size:10px;color:#CC0000;margin-bottom:6px;line-height:1.7;padding-right:28px">'+m.trip.dest+'</div>'+
+      '<div style="font-size:12px;color:#555;margin-bottom:8px">📅 '+m.trip.startDate.replace(/-/g,'/')+' → '+m.trip.endDate.replace(/-/g,'/')+'</div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+        '<span style="background:#FFF9C4;border-radius:20px;padding:3px 10px;font-size:11px;color:#7B5800">'+days+' 天</span>'+
+        '<span style="background:#FFF9C4;border-radius:20px;padding:3px 10px;font-size:11px;color:#7B5800">'+cnt+' 個景點</span>'+
+        (tot?'<span style="background:#FFF9C4;border-radius:20px;padding:3px 10px;font-size:11px;color:#7B5800">'+tot.toLocaleString()+' '+m.trip.currency+'</span>':'')+
+        '<span style="background:#f0f0f0;border-radius:20px;padding:3px 10px;font-size:11px;color:#888">'+m.archivedAt+'</span>'+
+      '</div></div>';
+  }).join('');
+}
+function showMemView(id){
+  var mem=memories.filter(function(m){return m.id===id;})[0];if(!mem)return;
+  currentMemId=id;memViewDay=0;
+  document.getElementById('mem-view-title').textContent=mem.trip.dest;
+  renderMemViewBody(mem);
+  document.getElementById('mem-view-overlay').style.display='flex';
+}
+function closeMemView(){document.getElementById('mem-view-overlay').style.display='none';}
+function selectMemDay(memId,dayIdx){
+  memViewDay=dayIdx;
+  var mem=memories.filter(function(m){return m.id===memId;})[0];if(mem)renderMemViewBody(mem);
+}
+function renderMemViewBody(mem){
+  var body=document.getElementById('mem-view-body');
+  var dayTabsHtml='<div style="display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;scrollbar-width:none;padding-bottom:4px">'+
+    mem.trip.days.map(function(d,i){
+      return'<button class="day-tab'+(i===memViewDay?' active':'')+'" onclick="selectMemDay('+mem.id+','+i+')" style="flex-shrink:0">'+d.label+'<br><span style="font-size:11px;opacity:.7">'+d.date+'</span></button>';
+    }).join('')+'</div>';
+  var df=mem.flights.filter(function(f){return f.dayIdx===memViewDay;});
+  var flHtml=df.map(function(f){
+    return'<div style="background:linear-gradient(135deg,#0f4c75,#2196c4);border-radius:12px;padding:12px 16px;color:white;margin-bottom:10px">'+
+      '<div style="font-size:11px;opacity:.7">'+(f.airline||'')+(f.num?' '+f.num:'')+'</div>'+
+      '<div style="display:flex;align-items:center;gap:8px;margin-top:6px">'+
+        '<span style="font-family:monospace;font-size:20px;font-weight:700">'+f.dep+'</span>'+
+        '<span style="flex:1;text-align:center;opacity:.7">─✈─</span>'+
+        '<span style="font-family:monospace;font-size:20px;font-weight:700">'+f.arr+'</span>'+
+      '</div><div style="display:flex;justify-content:space-between;margin-top:6px">'+
+        '<span style="font-family:monospace;font-size:15px;font-weight:700">'+f.depTime+'</span>'+
+        '<span style="font-family:monospace;font-size:15px;font-weight:700">'+f.arrTime+'</span>'+
+      '</div></div>';
+  }).join('');
+  var dayItems=mem.planItems.filter(function(p){return p.dayIdx===memViewDay;}).sort(function(a,b){return a.order-b.order;});
+  var firstMin=df.length?t2m(df[df.length-1].arrTime):(mem.dayStartTimes&&mem.dayStartTimes[memViewDay]!=null?mem.dayStartTimes[memViewDay]:9*60);
+  var curMin=firstMin;
+  var tlHtml=dayItems.map(function(item){
+    var st=m2t(curMin),endMin=item.stay?curMin+item.stay:null;
+    var tc=null;for(var i=0;i<mem.transports.length;i++){if(mem.transports[i].dayIdx===memViewDay&&mem.transports[i].afterItemId===item.id){tc=mem.transports[i];break;}}
+    if(endMin!=null)curMin=endMin;if(tc&&tc.durMin)curMin+=tc.durMin;
+    return'<div style="background:white;border-radius:14px;padding:12px 14px;box-shadow:0 2px 8px rgba(0,0,0,.08);display:flex;gap:10px;margin-bottom:6px;border-left:4px solid #CC0000">'+
+      '<div style="min-width:44px;text-align:center"><div style="font-size:13px;font-weight:700;color:#CC0000">'+st+'</div>'+
+      (endMin?'<div style="font-size:11px;color:#555;opacity:.65">↓'+m2t(endMin)+'</div>':'')+
+      '</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600">'+item.name+'</div>'+
+      (item.note?'<div style="font-size:12px;color:#555;margin-top:2px">'+item.note+'</div>':'')+
+      '<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">'+
+        '<span style="background:#FFE082;color:#7B5800;font-size:11px;padding:2px 8px;border-radius:20px">'+item.cat+'</span>'+
+        (item.stay?'<span style="background:rgba(204,0,0,.1);color:#CC0000;font-size:11px;padding:2px 8px;border-radius:20px">⏱ '+stayTxt(item.stay)+'</span>':'')+
+      '</div></div></div>';
+  }).join('');
+  if(!df.length&&!dayItems.length)tlHtml='<div style="text-align:center;padding:32px;color:#aaa">📝 無行程記錄</div>';
+  var dayExp=mem.expenses.filter(function(e){return e.dayIdx===memViewDay;});
+  var expHtml='';
+  if(dayExp.length){
+    var tot=dayExp.reduce(function(s,e){return s+e.amount;},0);
+    expHtml='<div style="background:#1a1a1a;border-radius:12px;padding:14px 16px;color:white;margin-top:12px">'+
+      '<div style="font-size:11px;opacity:.6;margin-bottom:4px">當日花費</div>'+
+      '<div style="font-size:22px;font-weight:700;color:#FFD700;margin-bottom:10px">'+tot.toLocaleString()+' <span style="font-size:12px;opacity:.7">'+mem.trip.currency+'</span></div>'+
+      dayExp.map(function(e){return'<div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border-radius:8px;padding:8px 10px;margin-bottom:4px">'+
+        '<span style="font-size:18px">'+e.cat+'</span><span style="flex:1;font-size:13px">'+e.name+'</span>'+
+        '<span style="font-size:13px;color:#FFD700">'+e.amount.toLocaleString()+'</span></div>';}).join('')+
+      '</div>';
+  }
+  body.innerHTML=dayTabsHtml+flHtml+tlHtml+expHtml;
+}
+function delMemory(id){
+  if(!confirm('確定刪除這個回憶？'))return;
+  memories=memories.filter(function(m){return m.id!==id;});saveMemories();renderMemories();
+}
+function saveMemories(){try{localStorage.setItem('tv_mem',JSON.stringify(memories));}catch(e){}}
+function loadMemories(){try{memories=JSON.parse(localStorage.getItem('tv_mem')||'[]');}catch(e){memories=[];}}
+
 /* ── SETUP ── */
 function startTrip(){
   var dest=document.getElementById('dest-input').value.trim();
@@ -460,7 +650,9 @@ function genDays(s,e){
   return days;
 }
 function showApp(){
-  document.getElementById('setup-screen').style.display='none';
+  ['home-screen','setup-screen','memories-screen'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.style.display='none';
+  });
   document.getElementById('app').style.display='flex';
   document.getElementById('app').style.flexDirection='column';
   document.getElementById('header-dest').textContent=trip.dest;
@@ -1101,17 +1293,19 @@ function resetTrip(){
   if(!confirm('確定清除所有資料？'))return;
   planItems=[];transports=[];flights=[];expenses=[];dayStartTimes={};
   currentDay=0;exchangeRate=null;_id=1;editMode=false;
+  trip={dest:'',startDate:'',endDate:'',currency:'JPY',days:[]};
   ['tv_trip','tv_plans','tv_tc','tv_flights','tv_exp','tv_id','tv_dst'].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
-  document.getElementById('app').style.display='none';
-  document.getElementById('setup-screen').style.display='flex';
+  showHome();
 }
 
 /* ── INIT ── */
+loadMemories();
 var today=new Date().toISOString().split('T')[0];
 document.getElementById('start-date').value=today;
 var nx=new Date();nx.setDate(nx.getDate()+6);
 document.getElementById('end-date').value=nx.toISOString().split('T')[0];
 if(loadData()&&trip.dest){showApp();renderAll();fetchRate(trip.currency);}
+else{showHome();}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(function(){});
 </script>
 </body>
