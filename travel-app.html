@@ -308,9 +308,14 @@ select.field-input option{background:#880000;color:white;}
       </div>
       <div class="header-btns">
         <button class="header-btn" id="edit-btn" onclick="toggleEditMode()">✏️ 編輯</button>
-        <button class="header-btn" onclick="openExportModal()">📤 匯出</button>
-        <button class="header-btn header-btn-mem" onclick="archiveMemory()">⭐ 保留回憶</button>
-        <button class="header-btn" onclick="resetTrip()">重設</button>
+        <div style="position:relative">
+          <button class="header-btn" onclick="toggleAppMenu(event)">⋯</button>
+          <div id="app-menu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#222;border:1px solid rgba(255,255,255,.15);border-radius:10px;min-width:120px;z-index:999;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.4)">
+            <button onclick="openExportModal();closeAppMenu()" style="display:block;width:100%;text-align:left;padding:10px 14px;background:none;border:none;color:white;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif">📤 匯出</button>
+            <button onclick="archiveMemory();closeAppMenu()" style="display:block;width:100%;text-align:left;padding:10px 14px;background:none;border:none;color:#FFD700;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;font-weight:700">⭐ 保留回憶</button>
+            <button onclick="resetTrip();closeAppMenu()" style="display:block;width:100%;text-align:left;padding:10px 14px;background:none;border:none;color:#ff6b6b;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;border-top:1px solid rgba(255,255,255,.08)">🗑 重設</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -458,7 +463,7 @@ select.field-input option{background:#880000;color:white;}
 var trip={dest:'',startDate:'',endDate:'',currency:'JPY',days:[]};
 var planItems=[],transports=[],flights=[],expenses=[],memories=[];
 var currentDay=0,exchangeRate=null;
-var memViewDay=0,currentMemId=null;
+var memViewDay=0,currentMemId=null,memSummaryOpen=false;
 var openTcId=null,openEditId=null,openBpEditId=null,openExpEditIdx=null;
 var editMode=false,_id=1;
 var expViewDay=0; // which day is selected in expense tab
@@ -626,12 +631,19 @@ function renderMemories(){
 }
 function showMemView(id){
   var mem=memories.filter(function(m){return m.id===id;})[0];if(!mem)return;
-  currentMemId=id;memViewDay=0;
+  currentMemId=id;memViewDay=0;memSummaryOpen=false;
   document.getElementById('mem-view-title').textContent=mem.trip.dest;
   renderMemViewBody(mem);
   document.getElementById('mem-view-overlay').style.display='flex';
 }
 function closeMemView(){document.getElementById('mem-view-overlay').style.display='none';}
+function toggleMemSummary(){
+  memSummaryOpen=!memSummaryOpen;
+  var panel=document.getElementById('mem-summary-panel');
+  var chevron=document.getElementById('mem-summary-chevron');
+  if(panel)panel.style.display=memSummaryOpen?'block':'none';
+  if(chevron)chevron.style.transform=memSummaryOpen?'rotate(180deg)':'';
+}
 function selectMemDay(memId,dayIdx){
   memViewDay=dayIdx;
   var mem=memories.filter(function(m){return m.id===memId;})[0];if(mem)renderMemViewBody(mem);
@@ -679,7 +691,7 @@ function renderMemViewBody(mem){
       tlHtml+='<div style="display:flex;align-items:center;gap:8px;padding:2px 0 2px 20px">'+
         '<div style="width:2px;background:#FFE082;height:22px;flex-shrink:0"></div>'+
         '<span style="font-size:13px">'+mode.icon+'</span>'+
-        '<span style="font-size:12px;color:#888">'+mode.label+(tc&&tc.durMin?' · '+durTxt(tc.durMin):'')+'</span>'+
+        '<span style="font-size:12px;color:#888">'+(tc&&tc.mode==='ship'&&tc.customLabel?tc.customLabel:mode.label)+(tc&&tc.durMin?' · '+durTxt(tc.durMin):'')+'</span>'+
       '</div>';
     } else {
       tlHtml+='<div style="height:8px"></div>';
@@ -698,9 +710,9 @@ function renderMemViewBody(mem){
         '<span style="font-size:13px;color:#FFD700">'+e.amount.toLocaleString()+'</span></div>';}).join('')+
       '</div>';
   }
-  // 全程總花費
+  // 全程總花費 collapsible bar
   var allExp=mem.expenses||[];
-  var summaryHtml='';
+  var summaryBarHtml='';
   if(allExp.length){
     var grandTot=allExp.reduce(function(s,e){return s+e.amount;},0);
     var dayRows=mem.trip.days.map(function(d,i){
@@ -715,17 +727,20 @@ function renderMemViewBody(mem){
         '<span style="color:#aaa;font-size:12px">'+c+'</span>'+
         '<span style="color:#ccc;font-size:12px;font-family:\'Share Tech Mono\',monospace">'+catMap[c].toLocaleString()+'</span></div>';
     }).join('');
-    summaryHtml='<div style="background:#1a1a1a;border-radius:12px;padding:14px 16px;margin-top:16px">'+
-      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">'+
-        '<span style="color:#FFD700;font-size:11px;font-weight:700;letter-spacing:.08em">📊 全程總花費</span>'+
-        '<div style="text-align:right">'+
-          '<div style="font-size:20px;font-weight:700;color:white;font-family:\'Share Tech Mono\',monospace">'+grandTot.toLocaleString()+' <span style="font-size:12px;opacity:.6">'+mem.trip.currency+'</span></div>'+
-        '</div></div>'+
-      '<div style="margin-bottom:8px">'+dayRows+'</div>'+
-      '<div style="border-top:1px solid rgba(255,255,255,.1);padding-top:8px">'+catRows+'</div>'+
-    '</div>';
+    summaryBarHtml=
+      '<div onclick="toggleMemSummary()" style="display:flex;align-items:center;justify-content:space-between;background:#2a2a2a;border-radius:10px;padding:12px 16px;cursor:pointer;margin-bottom:12px;border:1px solid rgba(255,215,0,.2)">'+
+        '<span style="font-size:13px;color:#FFD700;font-weight:700">📊 全程總花費</span>'+
+        '<div style="display:flex;align-items:center;gap:10px">'+
+          '<span style="font-size:14px;font-weight:700;color:white;font-family:\'Share Tech Mono\',monospace">'+grandTot.toLocaleString()+' <span style="font-size:11px;opacity:.6">'+mem.trip.currency+'</span></span>'+
+          '<span id="mem-summary-chevron" style="font-size:11px;color:#888;transition:transform .2s'+(memSummaryOpen?';transform:rotate(180deg)':'')+'">▼</span>'+
+        '</div>'+
+      '</div>'+
+      '<div id="mem-summary-panel" style="display:'+(memSummaryOpen?'block':'none')+';background:#1a1a1a;border-radius:10px;padding:14px 16px;margin-top:-8px;margin-bottom:12px">'+
+        '<div style="margin-bottom:8px">'+dayRows+'</div>'+
+        '<div style="border-top:1px solid rgba(255,255,255,.1);padding-top:8px">'+catRows+'</div>'+
+      '</div>';
   }
-  body.innerHTML=dayTabsHtml+flHtml+tlHtml+expHtml+summaryHtml;
+  body.innerHTML=dayTabsHtml+summaryBarHtml+flHtml+tlHtml+expHtml;
 }
 function delMemory(id){
   if(!confirm('確定刪除這個回憶？'))return;
@@ -960,7 +975,7 @@ function renderTimeline(){
         '<div class="tc-card">'+
           '<div class="tc-summary'+(editMode?' clickable':'')+'"'+(editMode?' onclick="toggleTc(\''+tcKey+'\')"':'')+'>'+
             '<span class="tc-icon-big">'+mode.icon+'</span>'+
-            '<div class="tc-info"><div class="tc-mode-label">'+mode.label+'</div>'+
+            '<div class="tc-info"><div class="tc-mode-label">'+(tcMode==='ship'&&tc&&tc.customLabel?tc.customLabel:mode.label)+'</div>'+
             '<div class="tc-dur-label">'+(tcMin?durTxt(tcMin):(editMode?'點此設定交通時間':'—'))+'</div></div>'+
             (editMode?'<span class="tc-chevron'+(isOpen?' open':'')+'">▼</span>':'')+
           '</div>'+
@@ -968,6 +983,10 @@ function renderTimeline(){
             '<div class="tc-panel'+(isOpen?' open':'')+'" id="pnl'+tcKey+'">'+
               '<div class="tc-panel-title">選擇交通方式</div>'+
               '<div class="tc-mode-grid">'+MODES.map(function(m){return'<div class="tc-mode-btn'+(tcMode===m.key?' sel':'')+'" onclick="setMode('+item.id+',\''+m.key+'\')"><span class="tm-icon">'+m.icon+'</span><span class="tm-label">'+m.label+'</span></div>';}).join('')+'</div>'+
+              '<div id="cti'+item.id+'" style="margin-bottom:8px;display:'+(tcMode==='ship'?'block':'none')+'">'+
+                '<div class="edit-field-label" style="margin-bottom:4px">交通方式名稱</div>'+
+                '<input class="edit-input" id="ctn'+item.id+'" placeholder="例：纜車、渡輪..." value="'+(tc&&tc.customLabel?tc.customLabel:'')+'">'+
+              '</div>'+
               '<div class="edit-field-label" style="margin-bottom:6px">交通時間</div>'+
               '<div id="tcdrum'+item.id+'"></div>'+
               '<button class="tc-done-btn" onclick="saveTc('+item.id+')">確定</button>'+
@@ -1015,7 +1034,10 @@ function setMode(itemId,modeKey){
   var tc=getTc(itemId);
   if(!tc){tc={id:uid(),dayIdx:currentDay,afterItemId:itemId,mode:modeKey,durMin:0};transports.push(tc);}
   else tc.mode=modeKey;
-  openTcId='tc'+itemId;renderTimeline();
+  openTcId='tc'+itemId;
+  renderTimeline();
+  var cti=document.getElementById('cti'+itemId);
+  if(cti)cti.style.display=modeKey==='ship'?'block':'none';
 }
 function saveTc(itemId){
   var td=tcDrums[itemId]||{h:0,m:0};
@@ -1023,6 +1045,8 @@ function saveTc(itemId){
   var tc=getTc(itemId);
   if(!tc){tc={id:uid(),dayIdx:currentDay,afterItemId:itemId,mode:'walk',durMin:durMin};transports.push(tc);}
   else tc.durMin=durMin;
+  var ctn=document.getElementById('ctn'+itemId);
+  if(ctn&&ctn.value.trim())tc.customLabel=ctn.value.trim();else delete tc.customLabel;
   openTcId=null;renderTimeline();saveData();
 }
 function addPlanItem(){
@@ -1205,6 +1229,18 @@ function delExp(i){expenses.splice(i,1);openExpEditIdx=null;renderExpenses();sav
 /* ── EXPORT ── */
 function openExportModal(){document.getElementById('export-modal').classList.add('open');}
 function closeExportModal(){document.getElementById('export-modal').classList.remove('open');}
+var appMenuOpen=false;
+function toggleAppMenu(e){
+  e.stopPropagation();
+  appMenuOpen=!appMenuOpen;
+  document.getElementById('app-menu').style.display=appMenuOpen?'block':'none';
+  if(appMenuOpen)document.addEventListener('click',closeAppMenu,{once:true});
+}
+function closeAppMenu(){
+  appMenuOpen=false;
+  var m=document.getElementById('app-menu');
+  if(m)m.style.display='none';
+}
 
 function exportCSV(){
   closeExportModal();
