@@ -251,6 +251,8 @@ select.field-input option{background:#880000;color:white;}
 /* DRAG */
 .plan-item.dragging{opacity:.35;transform:scale(.98);transition:transform .1s;}
 .plan-item.drag-over{box-shadow:0 -3px 0 0 #CC0000,var(--shadow);}
+.drag-handle{display:flex;align-items:center;justify-content:center;color:#ccc;font-size:16px;cursor:grab;padding:2px 6px 2px 0;flex-shrink:0;touch-action:none;user-select:none;-webkit-user-select:none;}
+.drag-handle:active{cursor:grabbing;color:#aaa;}
 /* MAP */
 .map-day-btn{background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.25);border-radius:8px;color:rgba(255,255,255,.7);font-size:11px;padding:4px 12px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;flex-shrink:0;white-space:nowrap;}
 .map-day-btn.active{background:#FFD700;color:#1a1a1a;border-color:#FFD700;font-weight:700;}
@@ -1085,9 +1087,10 @@ function renderTimeline(){
     var isEditOpen=editMode&&openEditId===item.id;
     var pi=planItems.filter(function(p){return p.id===item.id;})[0];
     var hasPin=pi&&pi.lat!=null;
-    var dragAttrs=editMode?' draggable="true" data-id="'+item.id+'" ondragstart="onDragStart(event,'+item.id+')" ondragend="onDragEnd(event)" ondragover="onDragOver(event,'+item.id+')" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'+item.id+')" ontouchstart="onTouchStart(event,'+item.id+')" ontouchmove="onTouchMove(event)" ontouchend="onTouchEnd(event)"':'';
-    html+='<div class="plan-item"'+dragAttrs+'>'+
+    var dropAttrs=editMode?' data-id="'+item.id+'" ondragover="onDragOver(event,'+item.id+')" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'+item.id+')"':'';
+    html+='<div class="plan-item"'+dropAttrs+'>'+
       '<div class="plan-row">'+
+        (editMode?'<div class="drag-handle" draggable="true" data-id="'+item.id+'" ondragstart="onDragStart(event,'+item.id+')" ondragend="onDragEnd(event)" ontouchstart="onTouchStart(event,'+item.id+')" ontouchmove="onTouchMove(event)" ontouchend="onTouchEnd(event)">⠿</div>':'')+
         '<div class="plan-time-col"><div class="plan-time">'+startT+'</div>'+(endT?'<div class="plan-end-time">↓'+endT+'</div>':'')+
         '</div><div class="plan-body">'+
         '<div class="plan-name">'+(hasPin?'📍 ':'')+item.name+'</div>'+
@@ -1775,10 +1778,11 @@ var dragSrcId=null;
 function onDragStart(e,id){
   dragSrcId=id;
   e.dataTransfer.effectAllowed='move';
-  setTimeout(function(){var el=document.querySelector('[data-id="'+id+'"]');if(el)el.classList.add('dragging');},0);
+  setTimeout(function(){var el=document.querySelector('.plan-item[data-id="'+id+'"]');if(el)el.classList.add('dragging');},0);
 }
 function onDragEnd(e){
-  e.currentTarget.classList.remove('dragging');
+  var planEl=e.currentTarget.closest('.plan-item');
+  if(planEl)planEl.classList.remove('dragging');
   document.querySelectorAll('.plan-item').forEach(function(el){el.classList.remove('drag-over');});
   dragSrcId=null;
 }
@@ -1806,14 +1810,16 @@ function onDrop(e,targetId){
 var touchDragId=null,touchGhost=null,touchOffX=0,touchOffY=0;
 function onTouchStart(e,id){
   if(!editMode)return;
+  e.preventDefault();
   touchDragId=id;
   var t=e.touches[0];
-  var el=e.currentTarget;var rect=el.getBoundingClientRect();
+  var planEl=e.currentTarget.closest('.plan-item');
+  var rect=planEl.getBoundingClientRect();
   touchOffX=t.clientX-rect.left;touchOffY=t.clientY-rect.top;
-  touchGhost=el.cloneNode(true);
+  touchGhost=planEl.cloneNode(true);
   touchGhost.style.cssText='position:fixed;left:'+(t.clientX-touchOffX)+'px;top:'+(t.clientY-touchOffY)+'px;width:'+rect.width+'px;opacity:.65;pointer-events:none;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.3);border-radius:var(--radius);';
   document.body.appendChild(touchGhost);
-  el.classList.add('dragging');
+  planEl.classList.add('dragging');
 }
 function onTouchMove(e){
   if(!touchDragId)return;
@@ -1831,7 +1837,7 @@ function onTouchEnd(e){
   if(!touchDragId)return;
   var t=e.changedTouches[0];
   if(touchGhost){touchGhost.remove();touchGhost=null;}
-  var srcEl=document.querySelector('[data-id="'+touchDragId+'"]');
+  var srcEl=document.querySelector('.plan-item[data-id="'+touchDragId+'"]');
   if(srcEl)srcEl.classList.remove('dragging');
   document.querySelectorAll('.plan-item').forEach(function(el){el.classList.remove('drag-over');});
   touchGhost&&(touchGhost.style.display='none');
