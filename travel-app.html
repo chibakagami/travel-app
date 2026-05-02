@@ -10,6 +10,8 @@
 <meta name="apple-mobile-web-app-title" content="旅行計畫">
 <meta name="theme-color" content="#CC0000">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root{--sand:#FFF9C4;--warm:#FFE082;--terracotta:#CC0000;--terra-dark:#990000;--deep:#1a1a1a;--mid:#555;--light:#FFF9F0;--red:#CC0000;--blue:#3B4CCA;--shadow:0 4px 20px rgba(0,0,0,0.13);--radius:16px;}
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -63,6 +65,8 @@ select.field-input option{background:#880000;color:white;}
 .tab-icon{font-size:20px;line-height:1;}
 .tab-content{display:none;flex:1;padding:16px;}
 .tab-content.active{display:block;}
+#tab-map{padding:0;}
+#tab-map.active{display:flex;flex-direction:column;}
 /* DAY TABS */
 .day-tabs-wrap{overflow-x:auto;margin:0 -16px;padding:0 16px;scrollbar-width:none;margin-bottom:16px;}
 .day-tabs-wrap::-webkit-scrollbar{display:none;}
@@ -244,10 +248,22 @@ select.field-input option{background:#880000;color:white;}
 .empty{text-align:center;padding:40px 20px;color:var(--mid);}
 .empty-icon{font-size:48px;margin-bottom:12px;}
 .empty-text{font-size:14px;opacity:.7;}
+/* DRAG */
+.plan-item.dragging{opacity:.35;transform:scale(.98);transition:transform .1s;}
+.plan-item.drag-over{box-shadow:0 -3px 0 0 #CC0000,var(--shadow);}
+/* MAP */
+.map-day-btn{background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.25);border-radius:8px;color:rgba(255,255,255,.7);font-size:11px;padding:4px 12px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;flex-shrink:0;white-space:nowrap;}
+.map-day-btn.active{background:#FFD700;color:#1a1a1a;border-color:#FFD700;font-weight:700;}
+#map-container{width:100%;}
+.map-pin-banner{background:#3B4CCA;color:white;padding:10px 16px;font-size:13px;font-family:'Noto Sans TC',sans-serif;display:none;align-items:center;gap:10px;}
+.map-pin-banner.show{display:flex;}
+.pin-set-btn{font-size:11px;padding:3px 8px;background:rgba(59,76,202,.12);border:1px solid rgba(59,76,202,.25);color:#3B4CCA;border-radius:6px;cursor:pointer;margin-top:6px;font-family:'Noto Sans TC',sans-serif;}
+.pin-remove-btn{font-size:11px;padding:3px 8px;background:rgba(204,0,0,.1);border:1px solid rgba(204,0,0,.2);color:#CC0000;border-radius:6px;cursor:pointer;margin-top:6px;font-family:'Noto Sans TC',sans-serif;}
 </style>
 </head>
 <body>
 
+<input type="file" id="backup-file-input" accept=".json" style="display:none" onchange="doRestore(this)">
 <!-- HOME SCREEN -->
 <div id="home-screen" style="display:none">
   <div class="home-top">
@@ -324,7 +340,9 @@ select.field-input option{background:#880000;color:white;}
           <button class="header-btn" onclick="toggleAppMenu(event)">⋯</button>
           <div id="app-menu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#222;border:1px solid rgba(255,255,255,.15);border-radius:10px;min-width:120px;z-index:999;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.4)">
             <button onclick="openExportModal();closeAppMenu()" style="display:block;width:100%;text-align:left;padding:10px 14px;background:none;border:none;color:white;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif">📤 匯出</button>
-            <button onclick="archiveMemory();closeAppMenu()" style="display:block;width:100%;text-align:left;padding:10px 14px;background:none;border:none;color:#FFD700;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;font-weight:700">⭐ 保留回憶</button>
+            <button onclick="backupAll();closeAppMenu()" style="display:block;width:100%;text-align:left;padding:10px 14px;background:none;border:none;color:white;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif">💾 備份資料</button>
+            <button onclick="triggerRestore();closeAppMenu()" style="display:block;width:100%;text-align:left;padding:10px 14px;background:none;border:none;color:white;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif">📂 還原備份</button>
+            <button onclick="archiveMemory();closeAppMenu()" style="display:block;width:100%;text-align:left;padding:10px 14px;background:none;border:none;color:#FFD700;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;font-weight:700;border-top:1px solid rgba(255,255,255,.08)">⭐ 保留回憶</button>
             <button onclick="resetTrip();closeAppMenu()" style="display:block;width:100%;text-align:left;padding:10px 14px;background:none;border:none;color:#ff6b6b;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;border-top:1px solid rgba(255,255,255,.08)">🗑 重設</button>
           </div>
         </div>
@@ -402,8 +420,18 @@ select.field-input option{background:#880000;color:white;}
   <!-- FAB: only in edit mode -->
   <button class="fab" id="exp-fab" onclick="openAddExpModal()">＋</button>
 
+  <div class="tab-content" id="tab-map" style="padding:0;display:none;flex-direction:column">
+    <div style="background:#CC0000;padding:8px 16px;border-bottom:2px solid #990000;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none" id="map-day-tabs"></div>
+    <div class="map-pin-banner" id="map-pin-banner">
+      <span style="flex:1">📍 在地圖上點一下，設定行程位置</span>
+      <button onclick="cancelMapPin()" style="background:rgba(255,255,255,.25);border:none;border-radius:6px;color:white;padding:4px 10px;font-size:12px;cursor:pointer;font-family:'Noto Sans TC',sans-serif">取消</button>
+    </div>
+    <div id="map-container" style="height:calc(100vh - 160px)"></div>
+  </div>
+
   <div class="tab-bar">
     <button class="tab-btn active" onclick="switchTab('plan',this)"><span class="tab-icon">📅</span>行程</button>
+    <button class="tab-btn" id="tab-map-btn" onclick="switchTab('map',this)"><span class="tab-icon">🗺️</span>地圖</button>
     <button class="tab-btn" onclick="switchTab('expense',this)"><span class="tab-icon">💰</span>記帳</button>
   </div>
 </div>
@@ -449,7 +477,7 @@ select.field-input option{background:#880000;color:white;}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
       <div>
         <div style="font-size:12px;color:var(--mid);margin-bottom:6px">金額（當地幣）</div>
-        <input class="form-input" type="number" id="add-exp-amount" placeholder="1200">
+        <input class="form-input" type="number" inputmode="decimal" id="add-exp-amount" placeholder="1200">
       </div>
       <div>
         <div style="font-size:12px;color:var(--mid);margin-bottom:6px">日期</div>
@@ -1055,11 +1083,14 @@ function renderTimeline(){
   items.forEach(function(item,idx){
     var startT=m2t(item.startMin),endT=item.endMin!=null?m2t(item.endMin):null;
     var isEditOpen=editMode&&openEditId===item.id;
-    html+='<div class="plan-item">'+
+    var pi=planItems.filter(function(p){return p.id===item.id;})[0];
+    var hasPin=pi&&pi.lat!=null;
+    var dragAttrs=editMode?' draggable="true" data-id="'+item.id+'" ondragstart="onDragStart(event,'+item.id+')" ondragend="onDragEnd(event)" ondragover="onDragOver(event,'+item.id+')" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'+item.id+')" ontouchstart="onTouchStart(event,'+item.id+')" ontouchmove="onTouchMove(event)" ontouchend="onTouchEnd(event)"':'';
+    html+='<div class="plan-item"'+dragAttrs+'>'+
       '<div class="plan-row">'+
         '<div class="plan-time-col"><div class="plan-time">'+startT+'</div>'+(endT?'<div class="plan-end-time">↓'+endT+'</div>':'')+
         '</div><div class="plan-body">'+
-        '<div class="plan-name">'+item.name+'</div>'+
+        '<div class="plan-name">'+(hasPin?'📍 ':'')+item.name+'</div>'+
         (item.note?'<div class="plan-note-txt">'+item.note+'</div>':'')+
         '<div class="plan-tags"><span class="tag tag-cat">'+item.cat+'</span>'+(item.stay?'<span class="tag tag-stay">⏱ '+stayTxt(item.stay)+'</span>':'')+
         '</div>'+
@@ -1081,6 +1112,10 @@ function renderTimeline(){
           '</div>'+
           '<div class="edit-field-label" style="margin-bottom:6px">停留時間</div>'+
           '<div id="edit-drum'+item.id+'"></div>'+
+          '<div style="display:flex;gap:8px;margin-top:8px">'+
+            '<button class="pin-set-btn" onclick="startMapPin('+item.id+')">📍 '+(hasPin?'更新地圖位置':'設定地圖位置')+'</button>'+
+            (hasPin?'<button class="pin-remove-btn" onclick="removeMapPin('+item.id+')">✕ 移除</button>':'')+
+          '</div>'+
           '<button class="btn-save-edit" onclick="saveEdit('+item.id+')" style="margin-top:10px">儲存</button>'+
         '</div>'+
         '<div class="plan-copy-panel'+(openCopyId===item.id?' open':'')+'" id="cp'+item.id+'">'+
@@ -1326,7 +1361,7 @@ function renderExpenses(){
         '<div class="exp-edit-panel'+(isOpen?' open':'')+'" id="exp-ep'+gi+'">'+
           '<div class="edit-row">'+
             '<input class="edit-input" id="expname'+gi+'" value="'+e.name+'" placeholder="名稱">'+
-            '<input class="edit-input" type="number" id="expamt'+gi+'" value="'+e.amount+'">'+
+            '<input class="edit-input" type="number" inputmode="decimal" id="expamt'+gi+'" value="'+e.amount+'">'+
           '</div>'+
           '<div class="edit-row">'+
             '<select class="edit-input" id="expcat'+gi+'">'+EXP_CATS_DEF.map(function(c){return'<option value="'+c.key+'"'+(c.key===e.cat?' selected':'')+'>'+c.icon+' '+c.label+'</option>';}).join('')+'</select>'+
@@ -1639,12 +1674,19 @@ function updateSummaryBar(){
 
 /* ── MISC ── */
 function switchTab(tab,btn){
-  document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');t.style.display='none';});
   document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
-  document.getElementById('tab-'+tab).classList.add('active');btn.classList.add('active');
+  var tc=document.getElementById('tab-'+tab);
+  if(tc){tc.style.display=(tab==='map'?'flex':'block');tc.classList.add('active');}
+  btn.classList.add('active');
   var fab=document.getElementById('exp-fab');
   if(fab){if(tab==='expense'&&editMode)fab.classList.add('show');else fab.classList.remove('show');}
   if(tab==='expense'){expViewDay=currentDay;expCatFilter=null;renderExpenses();}
+  if(tab==='map'){
+    mapViewDay=currentDay;
+    renderMapDayTabs();
+    setTimeout(function(){initMap();renderMapPins();if(mapInstance)mapInstance.invalidateSize();},80);
+  }
 }
 
 /* ── STORAGE ── */
@@ -1690,6 +1732,190 @@ var nx=new Date();nx.setDate(nx.getDate()+6);
 document.getElementById('end-date').value=nx.toISOString().split('T')[0];
 showHome();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(function(){});
+
+/* ── BACKUP / RESTORE ── */
+function backupAll(){
+  var data={trip:trip,plans:planItems,tc:transports,flights:flights,exp:expenses,id:_id,dst:dayStartTimes,mem:memories};
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='travel-backup-'+(trip.dest||'trip')+'-'+(new Date().toISOString().slice(0,10))+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+function triggerRestore(){
+  document.getElementById('backup-file-input').value='';
+  document.getElementById('backup-file-input').click();
+}
+function doRestore(input){
+  var file=input.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var data=JSON.parse(e.target.result);
+      if(!confirm('確定要還原備份？現有資料將被覆蓋。'))return;
+      if(data.trip)trip=data.trip;
+      if(data.plans)planItems=data.plans;
+      if(data.tc)transports=data.tc;
+      if(data.flights)flights=data.flights;
+      if(data.exp)expenses=data.exp;
+      if(data.id)_id=+data.id;
+      if(data.dst)dayStartTimes=data.dst;
+      if(data.mem)memories=data.mem;
+      saveData();saveMemories();
+      renderAll();
+      alert('還原成功！');
+    }catch(ex){alert('檔案格式錯誤，請確認是否為備份檔案。');}
+  };
+  reader.readAsText(file);
+}
+
+/* ── DRAG & DROP ── */
+var dragSrcId=null;
+function onDragStart(e,id){
+  dragSrcId=id;
+  e.dataTransfer.effectAllowed='move';
+  setTimeout(function(){var el=document.querySelector('[data-id="'+id+'"]');if(el)el.classList.add('dragging');},0);
+}
+function onDragEnd(e){
+  e.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('.plan-item').forEach(function(el){el.classList.remove('drag-over');});
+  dragSrcId=null;
+}
+function onDragOver(e,id){
+  e.preventDefault();
+  e.dataTransfer.dropEffect='move';
+  document.querySelectorAll('.plan-item').forEach(function(el){el.classList.remove('drag-over');});
+  if(dragSrcId!==id)e.currentTarget.classList.add('drag-over');
+}
+function onDragLeave(e){e.currentTarget.classList.remove('drag-over');}
+function onDrop(e,targetId){
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if(!dragSrcId||dragSrcId===targetId)return;
+  var dayItems=planItems.filter(function(p){return p.dayIdx===currentDay;}).sort(function(a,b){return a.order-b.order;});
+  var srcIdx=dayItems.findIndex(function(p){return p.id===dragSrcId;});
+  var tgtIdx=dayItems.findIndex(function(p){return p.id===targetId;});
+  if(srcIdx<0||tgtIdx<0)return;
+  var moved=dayItems.splice(srcIdx,1)[0];
+  dayItems.splice(tgtIdx,0,moved);
+  dayItems.forEach(function(p,i){p.order=i;});
+  dragSrcId=null;renderTimeline();saveData();
+}
+/* Touch drag */
+var touchDragId=null,touchGhost=null,touchOffX=0,touchOffY=0;
+function onTouchStart(e,id){
+  if(!editMode)return;
+  touchDragId=id;
+  var t=e.touches[0];
+  var el=e.currentTarget;var rect=el.getBoundingClientRect();
+  touchOffX=t.clientX-rect.left;touchOffY=t.clientY-rect.top;
+  touchGhost=el.cloneNode(true);
+  touchGhost.style.cssText='position:fixed;left:'+(t.clientX-touchOffX)+'px;top:'+(t.clientY-touchOffY)+'px;width:'+rect.width+'px;opacity:.65;pointer-events:none;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.3);border-radius:var(--radius);';
+  document.body.appendChild(touchGhost);
+  el.classList.add('dragging');
+}
+function onTouchMove(e){
+  if(!touchDragId)return;
+  e.preventDefault();
+  var t=e.touches[0];
+  if(touchGhost){touchGhost.style.left=(t.clientX-touchOffX)+'px';touchGhost.style.top=(t.clientY-touchOffY)+'px';}
+  touchGhost.style.display='none';
+  var under=document.elementFromPoint(t.clientX,t.clientY);
+  touchGhost.style.display='';
+  document.querySelectorAll('.plan-item').forEach(function(el){el.classList.remove('drag-over');});
+  var planEl=under?under.closest('.plan-item'):null;
+  if(planEl&&+planEl.dataset.id!==touchDragId)planEl.classList.add('drag-over');
+}
+function onTouchEnd(e){
+  if(!touchDragId)return;
+  var t=e.changedTouches[0];
+  if(touchGhost){touchGhost.remove();touchGhost=null;}
+  var srcEl=document.querySelector('[data-id="'+touchDragId+'"]');
+  if(srcEl)srcEl.classList.remove('dragging');
+  document.querySelectorAll('.plan-item').forEach(function(el){el.classList.remove('drag-over');});
+  touchGhost&&(touchGhost.style.display='none');
+  var under=document.elementFromPoint(t.clientX,t.clientY);
+  var planEl=under?under.closest('.plan-item'):null;
+  var targetId=planEl?+planEl.dataset.id:null;
+  if(targetId&&targetId!==touchDragId){
+    var dayItems=planItems.filter(function(p){return p.dayIdx===currentDay;}).sort(function(a,b){return a.order-b.order;});
+    var srcIdx=dayItems.findIndex(function(p){return p.id===touchDragId;});
+    var tgtIdx=dayItems.findIndex(function(p){return p.id===targetId;});
+    if(srcIdx>=0&&tgtIdx>=0){
+      var moved=dayItems.splice(srcIdx,1)[0];
+      dayItems.splice(tgtIdx,0,moved);
+      dayItems.forEach(function(p,i){p.order=i;});
+      saveData();
+    }
+  }
+  touchDragId=null;renderTimeline();
+}
+
+/* ── MAP ── */
+var mapInstance=null,mapViewDay=0,mapPinningId=null,mapMarkers=[];
+function initMap(){
+  if(mapInstance||typeof L==='undefined')return;
+  mapInstance=L.map('map-container').setView([35.6762,139.6503],12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© <a href="https://www.openstreetmap.org/copyright">OSM</a>',maxZoom:19
+  }).addTo(mapInstance);
+  mapInstance.on('click',function(ev){
+    if(!mapPinningId)return;
+    var pi=planItems.filter(function(p){return p.id===mapPinningId;})[0];
+    if(pi){pi.lat=ev.latlng.lat;pi.lng=ev.latlng.lng;saveData();}
+    mapPinningId=null;
+    document.getElementById('map-pin-banner').classList.remove('show');
+    renderMapPins();renderTimeline();
+  });
+}
+function renderMapDayTabs(){
+  var el=document.getElementById('map-day-tabs');
+  if(!el||!trip.days)return;
+  el.innerHTML=trip.days.map(function(d,i){
+    return'<button class="map-day-btn'+(i===mapViewDay?' active':'')+'" onclick="selectMapDay('+i+')">'+d.label+'</button>';
+  }).join('');
+}
+function selectMapDay(i){
+  mapViewDay=i;renderMapDayTabs();renderMapPins();
+}
+function renderMapPins(){
+  if(!mapInstance)return;
+  mapMarkers.forEach(function(m){m.remove();});mapMarkers=[];
+  var items=computeTimes(mapViewDay);
+  var bounds=[];
+  items.forEach(function(item,idx){
+    var pi=planItems.filter(function(p){return p.id===item.id;})[0];
+    if(!pi||pi.lat==null)return;
+    var marker=L.marker([pi.lat,pi.lng]);
+    marker.bindPopup('<b>'+(idx+1)+'. '+escHtml(item.name)+'</b><br>'+m2t(item.startMin)+(item.endMin?'–'+m2t(item.endMin):'')+'<br><small>'+escHtml(item.cat)+'</small>');
+    marker.addTo(mapInstance);mapMarkers.push(marker);
+    bounds.push([pi.lat,pi.lng]);
+  });
+  if(bounds.length===1)mapInstance.setView(bounds[0],15);
+  else if(bounds.length>1)mapInstance.fitBounds(bounds,{padding:[40,40]});
+}
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function startMapPin(itemId){
+  mapPinningId=itemId;
+  document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');t.style.display='none';});
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+  var tc=document.getElementById('tab-map');tc.style.display='flex';tc.classList.add('active');
+  document.getElementById('tab-map-btn').classList.add('active');
+  mapViewDay=currentDay;
+  renderMapDayTabs();
+  setTimeout(function(){initMap();renderMapPins();if(mapInstance)mapInstance.invalidateSize();},80);
+  document.getElementById('map-pin-banner').classList.add('show');
+}
+function cancelMapPin(){
+  mapPinningId=null;
+  document.getElementById('map-pin-banner').classList.remove('show');
+}
+function removeMapPin(itemId){
+  var pi=planItems.filter(function(p){return p.id===itemId;})[0];
+  if(pi){delete pi.lat;delete pi.lng;saveData();}
+  renderMapPins();renderTimeline();
+}
 </script>
 </body>
 </html>
