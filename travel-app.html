@@ -412,6 +412,13 @@ select.field-input option{background:#880000;color:white;}
     <div style="background:#CC0000;padding:16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;border-bottom:3px solid #990000">
       <button onclick="closeMemView()" style="background:rgba(255,255,255,.15);border:none;border-radius:10px;color:white;padding:8px 12px;font-family:'Noto Sans TC',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap">✕ 關閉</button>
       <div id="mem-view-title" style="font-family:'Press Start 2P',monospace;font-size:11px;color:white;line-height:1.7;flex:1"></div>
+      <div style="position:relative;flex-shrink:0">
+        <button onclick="toggleMemExportMenu(event)" style="background:rgba(255,255,255,.15);border:none;border-radius:10px;color:white;padding:8px 12px;font-family:'Noto Sans TC',sans-serif;font-size:13px;cursor:pointer">📤</button>
+        <div id="mem-export-menu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#222;border:1px solid rgba(255,255,255,.15);border-radius:10px;min-width:130px;z-index:999;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.4)">
+          <button onclick="exportMemCSV()" style="display:block;width:100%;text-align:left;padding:10px 14px;background:none;border:none;color:white;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif">📊 Excel / CSV</button>
+          <button onclick="exportMemPDF()" style="display:block;width:100%;text-align:left;padding:10px 14px;background:none;border:none;color:white;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;border-top:1px solid rgba(255,255,255,.08)">🖨️ 列印 / PDF</button>
+        </div>
+      </div>
     </div>
     <div id="mem-view-body" style="padding:16px"></div>
   </div>
@@ -638,7 +645,35 @@ function showMemView(id){
   renderMemViewBody(mem);
   document.getElementById('mem-view-overlay').style.display='flex';
 }
-function closeMemView(){document.getElementById('mem-view-overlay').style.display='none';}
+function closeMemView(){document.getElementById('mem-view-overlay').style.display='none';closeMemExportMenu();}
+var memExportMenuOpen=false;
+function toggleMemExportMenu(e){
+  e.stopPropagation();
+  memExportMenuOpen=!memExportMenuOpen;
+  document.getElementById('mem-export-menu').style.display=memExportMenuOpen?'block':'none';
+  if(memExportMenuOpen)document.addEventListener('click',closeMemExportMenu,{once:true});
+}
+function closeMemExportMenu(){
+  memExportMenuOpen=false;
+  var m=document.getElementById('mem-export-menu');
+  if(m)m.style.display='none';
+}
+function exportMemCSV(){
+  var mem=memories.filter(function(m){return m.id===currentMemId;})[0];if(!mem)return;
+  closeMemExportMenu();
+  var _t=trip,_fl=flights,_pi=planItems,_tr=transports,_ex=expenses,_r=exchangeRate;
+  trip=mem.trip;flights=mem.flights;planItems=mem.planItems;transports=mem.transports;expenses=mem.expenses;exchangeRate=mem.exchangeRate||null;
+  exportCSV();
+  trip=_t;flights=_fl;planItems=_pi;transports=_tr;expenses=_ex;exchangeRate=_r;
+}
+function exportMemPDF(){
+  var mem=memories.filter(function(m){return m.id===currentMemId;})[0];if(!mem)return;
+  closeMemExportMenu();
+  var _t=trip,_fl=flights,_pi=planItems,_tr=transports,_ex=expenses,_r=exchangeRate;
+  trip=mem.trip;flights=mem.flights;planItems=mem.planItems;transports=mem.transports;expenses=mem.expenses;exchangeRate=mem.exchangeRate||null;
+  exportPDF();
+  trip=_t;flights=_fl;planItems=_pi;transports=_tr;expenses=_ex;exchangeRate=_r;
+}
 function toggleMemSummary(){
   memSummaryOpen=!memSummaryOpen;
   var panel=document.getElementById('mem-summary-panel');
@@ -725,7 +760,7 @@ function renderMemViewBody(mem){
       '</div>'+
       '<div id="mem-day-exp-panel" style="display:'+(memDayExpOpen?'block':'none')+';background:#1a1a1a;border-radius:10px;padding:12px 16px;margin-top:4px">'+
         dayExp.map(function(e){return'<div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border-radius:8px;padding:8px 10px;margin-bottom:4px">'+
-          '<span style="font-size:18px">'+e.cat+'</span><span style="flex:1;font-size:13px">'+e.name+'</span>'+
+          '<span style="font-size:18px">'+e.cat+'</span><span style="flex:1;font-size:13px;color:#e0e0e0">'+e.name+'</span>'+
           '<div style="text-align:right">'+
             '<div style="font-size:13px;color:#FFD700">'+e.amount.toLocaleString()+'</div>'+
             (memRate?'<div style="font-size:10px;color:#888">NT$'+Math.round(e.amount*memRate).toLocaleString()+'</div>':'')+
