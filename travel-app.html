@@ -130,8 +130,11 @@ select.field-input option{background:#880000;color:white;}
 .plan-edit-btn{background:rgba(204,0,0,.1);border:none;color:#CC0000;font-size:13px;cursor:pointer;padding:3px 7px;border-radius:6px;line-height:1;}
 .plan-move-btn{background:rgba(255,255,255,.1);border:none;color:#aaa;font-size:13px;cursor:pointer;padding:3px 7px;border-radius:6px;line-height:1;}
 .plan-move-btn:disabled{opacity:.25;cursor:not-allowed;}
+.plan-copy-btn{background:rgba(59,76,202,.12);border:none;color:#3B4CCA;font-size:13px;cursor:pointer;padding:3px 7px;border-radius:6px;line-height:1;}
 .plan-del{background:none;border:none;color:#ccc;font-size:16px;cursor:pointer;padding:2px 4px;line-height:1;}
 .plan-edit-panel{display:none;margin-top:12px;padding-top:12px;border-top:1px solid #FFE082;}
+.plan-copy-panel{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed #FFE082;}
+.plan-copy-panel.open{display:block;}
 .plan-edit-panel.open{display:block;}
 .edit-field-label{font-size:11px;color:var(--mid);margin-bottom:4px;font-weight:600;}
 .edit-input{width:100%;border:2px solid #FFE082;border-radius:8px;padding:8px 10px;font-family:'Noto Sans TC',sans-serif;font-size:13px;color:var(--deep);outline:none;background:var(--light);margin-bottom:8px;}
@@ -479,7 +482,7 @@ var trip={dest:'',startDate:'',endDate:'',currency:'JPY',days:[]};
 var planItems=[],transports=[],flights=[],expenses=[],memories=[];
 var currentDay=0,exchangeRate=null;
 var memViewDay=0,currentMemId=null,memSummaryOpen=false,memDayExpOpen=false;
-var openTcId=null,openEditId=null,openBpEditId=null,openExpEditIdx=null;
+var openTcId=null,openEditId=null,openBpEditId=null,openExpEditIdx=null,openCopyId=null;
 var editMode=false,_id=1;
 var expViewDay=0; // which day is selected in expense tab
 var expCatFilter=null; // null = all
@@ -869,12 +872,20 @@ function showApp(){
 }
 function renderAll(){renderDayTabs();renderFlightCards();renderTimeline();renderExpenses();}
 function renderDayTabs(){
+  var wk=['日','一','二','三','四','五','六'];
+  var sp=trip.startDate?trip.startDate.split('-'):null;
   document.getElementById('day-tabs').innerHTML=trip.days.map(function(d,i){
-    return'<button class="day-tab'+(i===currentDay?' active':'')+'" onclick="selectDay('+i+')">'+d.label+'<br><span style="font-size:11px;opacity:.7">'+d.date+'</span></button>';
+    var dow='';
+    if(sp){var base=new Date(+sp[0],+sp[1]-1,+sp[2]);base.setDate(base.getDate()+i);dow='星期'+wk[base.getDay()];}
+    var dateDisp=d.date.replace(/^0/,'').replace(/\/0/,'/');
+    return'<button class="day-tab'+(i===currentDay?' active':'')+'" onclick="selectDay('+i+')" style="white-space:nowrap">'+
+      '<span style="display:block;font-size:12px;font-weight:600">'+d.label+'（'+dateDisp+'）</span>'+
+      (dow?'<span style="display:block;font-size:10px;opacity:.7;margin-top:1px">'+dow+'</span>':'')+
+    '</button>';
   }).join('');
 }
 function selectDay(i){
-  currentDay=i;openTcId=null;openEditId=null;openBpEditId=null;
+  currentDay=i;openTcId=null;openEditId=null;openBpEditId=null;openCopyId=null;
   renderDayTabs();renderFlightCards();renderTimeline();
   if(editMode)updateFirstTimeRow();
 }
@@ -884,7 +895,7 @@ function toggleEditMode(){
   editMode=!editMode;
   var btn=document.getElementById('edit-btn');
   if(editMode){btn.textContent='✅ 完成';btn.classList.add('edit-on');}
-  else{btn.textContent='✏️ 編輯';btn.classList.remove('edit-on');openEditId=null;openBpEditId=null;}
+  else{btn.textContent='✏️ 編輯';btn.classList.remove('edit-on');openEditId=null;openBpEditId=null;openCopyId=null;}
   document.getElementById('add-flight-section').style.display=editMode?'block':'none';
   document.getElementById('add-plan-card').style.display=editMode?'block':'none';
   var fab=document.getElementById('exp-fab');
@@ -1051,6 +1062,20 @@ function renderTimeline(){
           '<div class="edit-field-label" style="margin-bottom:6px">停留時間</div>'+
           '<div id="edit-drum'+item.id+'"></div>'+
           '<button class="btn-save-edit" onclick="saveEdit('+item.id+')" style="margin-top:10px">儲存</button>'+
+        '</div>'+
+        '<div class="plan-copy-panel'+(openCopyId===item.id?' open':'')+'" id="cp'+item.id+'">'+
+          '<div class="edit-field-label" style="margin-bottom:8px">複製到哪一天？</div>'+
+          '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
+            trip.days.map(function(d,di){
+              if(di===currentDay)return'';
+              var sp2=trip.startDate?trip.startDate.split('-'):null;
+              var dow2='';if(sp2){var b2=new Date(+sp2[0],+sp2[1]-1,+sp2[2]);b2.setDate(b2.getDate()+di);dow2='星期'+['日','一','二','三','四','五','六'][b2.getDay()];}
+              var dd=d.date.replace(/^0/,'').replace(/\/0/,'/');
+              return'<button class="day-tab" style="font-size:11px;padding:5px 10px;white-space:nowrap" onclick="copyPlanToDay('+item.id+','+di+')">'+
+                d.label+'（'+dd+'）'+(dow2?'<br><span style="font-size:9px;opacity:.7">'+dow2+'</span>':'')+
+              '</button>';
+            }).join('')+
+          '</div>'+
         '</div>'
       :'')+
       '</div>'+
@@ -1058,6 +1083,7 @@ function renderTimeline(){
         '<button class="plan-move-btn" onclick="movePlan('+item.id+',-1)"'+(idx===0?' disabled':'')+'>↑</button>'+
         '<button class="plan-move-btn" onclick="movePlan('+item.id+',1)"'+(idx===items.length-1?' disabled':'')+'>↓</button>'+
         '<button class="plan-edit-btn" onclick="toggleEditPanel('+item.id+')">✏️</button>'+
+        '<button class="plan-copy-btn" onclick="toggleCopyPanel('+item.id+')" title="複製到其他天">📋</button>'+
         '<button class="plan-del" onclick="delPlan('+item.id+')">✕</button>'+
       '</div>':'')+
     '</div>';
@@ -1188,6 +1214,14 @@ function movePlan(id,dir){
   var tmp=dayItems[idx].order;
   dayItems[idx].order=dayItems[swapIdx].order;
   dayItems[swapIdx].order=tmp;
+  renderTimeline();saveData();
+}
+function toggleCopyPanel(id){openCopyId=openCopyId===id?null:id;openEditId=null;renderTimeline();}
+function copyPlanToDay(itemId,targetDay){
+  var item=planItems.filter(function(p){return p.id===itemId;})[0];if(!item)return;
+  var maxOrder=planItems.filter(function(p){return p.dayIdx===targetDay;}).reduce(function(m,p){return Math.max(m,p.order);}, -1);
+  planItems.push({id:uid(),dayIdx:targetDay,time:item.time,order:maxOrder+1,name:item.name,cat:item.cat,note:item.note||'',stay:item.stay||0});
+  openCopyId=null;
   renderTimeline();saveData();
 }
 
