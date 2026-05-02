@@ -302,7 +302,10 @@ select.field-input option{background:#880000;color:white;}
 <div id="app">
   <div class="app-header">
     <div class="header-top">
-      <div><div class="trip-name" id="header-dest"></div><div class="trip-dates" id="header-dates"></div></div>
+      <div style="display:flex;align-items:flex-start;gap:8px">
+        <button class="header-btn" onclick="showHome()" style="font-size:14px;padding:5px 10px">←</button>
+        <div><div class="trip-name" id="header-dest"></div><div class="trip-dates" id="header-dates"></div></div>
+      </div>
       <div class="header-btns">
         <button class="header-btn" id="edit-btn" onclick="toggleEditMode()">✏️ 編輯</button>
         <button class="header-btn" onclick="openExportModal()">📤 匯出</button>
@@ -337,7 +340,7 @@ select.field-input option{background:#880000;color:white;}
         <select class="form-input" id="plan-cat">
           <option value="🏛 景點">🏛 景點</option><option value="🍜 餐廳">🍜 餐廳</option>
           <option value="🛍 購物">🛍 購物</option><option value="🏨 住宿">🏨 住宿</option>
-          <option value="✈ 機場">✈ 機場</option><option value="☕ 咖啡">☕ 咖啡</option>
+          <option value="✈ 機場">✈ 機場</option>
           <option value="🎭 體驗">🎭 體驗</option>
         </select>
         <input class="form-input" id="plan-note" placeholder="備註（可選）">
@@ -468,8 +471,8 @@ var dayStartTimes={};// {dayIdx: minutes}
 var MODES=[
   {key:'walk',icon:'🚶',label:'步行'},{key:'metro',icon:'🚇',label:'地鐵'},
   {key:'bus',icon:'🚌',label:'公車'},{key:'taxi',icon:'🚕',label:'計程車'},
-  {key:'car',icon:'🚗',label:'自駕'},{key:'bike',icon:'🚲',label:'腳踏車'},
-  {key:'train',icon:'🚆',label:'火車'},{key:'ship',icon:'⛴',label:'渡輪'}
+  {key:'car',icon:'🚗',label:'自駕'},{key:'bike',icon:'🚅',label:'新幹線'},
+  {key:'train',icon:'🚃',label:'電車'},{key:'ship',icon:'🔹',label:'其他'}
 ];
 
 var EXP_CATS_DEF=[
@@ -482,7 +485,7 @@ var EXP_CATS_DEF=[
   {key:'💊',label:'其他',icon:'💊'},
   {key:'🚑',label:'緊急',icon:'🚑'}
 ];
-var CATS=['🏛 景點','🍜 餐廳','🛍 購物','🏨 住宿','✈ 機場','☕ 咖啡','🎭 體驗'];
+var CATS=['🏛 景點','🍜 餐廳','🛍 購物','🏨 住宿','✈ 機場','🎭 體驗'];
 var EXP_CATS=['🍜 餐飲','🚌 交通','🏛 門票','🛍 購物','🏨 住宿','💊 其他'];
 
 function uid(){return _id++;}
@@ -695,7 +698,34 @@ function renderMemViewBody(mem){
         '<span style="font-size:13px;color:#FFD700">'+e.amount.toLocaleString()+'</span></div>';}).join('')+
       '</div>';
   }
-  body.innerHTML=dayTabsHtml+flHtml+tlHtml+expHtml;
+  // 全程總花費
+  var allExp=mem.expenses||[];
+  var summaryHtml='';
+  if(allExp.length){
+    var grandTot=allExp.reduce(function(s,e){return s+e.amount;},0);
+    var dayRows=mem.trip.days.map(function(d,i){
+      var s=allExp.filter(function(e){return e.dayIdx===i;}).reduce(function(a,e){return a+e.amount;},0);
+      return s?'<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.07)">'+
+        '<span style="color:#aaa;font-size:12px">'+d.label+' '+d.date+'</span>'+
+        '<span style="color:#FFD700;font-size:12px;font-family:\'Share Tech Mono\',monospace">'+s.toLocaleString()+'</span></div>':'';
+    }).join('');
+    var catMap={};allExp.forEach(function(e){catMap[e.cat]=(catMap[e.cat]||0)+e.amount;});
+    var catRows=Object.keys(catMap).sort(function(a,b){return catMap[b]-catMap[a];}).map(function(c){
+      return'<div style="display:flex;justify-content:space-between;padding:3px 0">'+
+        '<span style="color:#aaa;font-size:12px">'+c+'</span>'+
+        '<span style="color:#ccc;font-size:12px;font-family:\'Share Tech Mono\',monospace">'+catMap[c].toLocaleString()+'</span></div>';
+    }).join('');
+    summaryHtml='<div style="background:#1a1a1a;border-radius:12px;padding:14px 16px;margin-top:16px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">'+
+        '<span style="color:#FFD700;font-size:11px;font-weight:700;letter-spacing:.08em">📊 全程總花費</span>'+
+        '<div style="text-align:right">'+
+          '<div style="font-size:20px;font-weight:700;color:white;font-family:\'Share Tech Mono\',monospace">'+grandTot.toLocaleString()+' <span style="font-size:12px;opacity:.6">'+mem.trip.currency+'</span></div>'+
+        '</div></div>'+
+      '<div style="margin-bottom:8px">'+dayRows+'</div>'+
+      '<div style="border-top:1px solid rgba(255,255,255,.1);padding-top:8px">'+catRows+'</div>'+
+    '</div>';
+  }
+  body.innerHTML=dayTabsHtml+flHtml+tlHtml+expHtml+summaryHtml;
 }
 function delMemory(id){
   if(!confirm('確定刪除這個回憶？'))return;
