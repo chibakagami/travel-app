@@ -1520,7 +1520,7 @@ function exportTripData(tObj,pItems,tcs,fls,exps,fname){
   lines.push(csvRow(['天數','行程順序','交通方式','時間(分)','費用']));
   tcs.forEach(function(tc){
     var dayItems=pItems.filter(function(p){return p.dayIdx===tc.dayIdx;}).sort(function(a,b){return a.order-b.order;});
-    var fromIdx=dayItems.findIndex(function(p){return p.id===tc.fromId;});
+    var fromIdx=dayItems.findIndex(function(p){return p.id===tc.afterItemId;});
     if(fromIdx<0)return;
     lines.push(csvRow([tc.dayIdx+1,fromIdx+1,tc.mode||'walk',tc.durMin||0,tc.cost||0]));
   });
@@ -2054,7 +2054,7 @@ function importCSVData(text){
     var dayItems=mPlan.filter(function(p){return p.dayIdx===di;}).sort(function(a,b){return a.order-b.order;});
     var fromItem=dayItems[Math.max(0,(+r[1]||1)-1)];
     if(!fromItem)return;
-    mTrans.push({id:idC++,fromId:fromItem.id,dayIdx:di,mode:r[2]||'walk',durMin:+r[3]||0,cost:+r[4]||0});
+    mTrans.push({id:idC++,afterItemId:fromItem.id,dayIdx:di,mode:r[2]||'walk',durMin:+r[3]||0,cost:+r[4]||0});
   });
   (sections['航班']||[]).slice(1).forEach(function(r){
     if(!r[1])return;
@@ -2073,7 +2073,7 @@ function importCSVData(text){
   var sd=meta['出發日期']||new Date().toISOString().split('T')[0];
   for(var i=0;i<=maxDay;i++){
     var d=new Date(sd+'T00:00:00');d.setDate(d.getDate()+i);
-    days.push({label:'Day'+(i+1),date:d.toISOString().split('T')[0]});
+    days.push({label:'D'+(i+1),date:(''+( d.getMonth()+1)).padStart(2,'0')+'/'+(''+d.getDate()).padStart(2,'0')});
   }
   return{trip:{dest:meta['旅行名稱']||'匯入行程',startDate:meta['出發日期']||'',endDate:meta['回程日期']||'',currency:meta['貨幣']||'JPY',days:days},
     planItems:mPlan,transports:mTrans,flights:mFlights,expenses:mExp};
@@ -2123,7 +2123,10 @@ function doImportExcel(input){
       }
       if(!dayCols.length){alert('找不到日期欄位，請確認第一列包含日期');input.value='';return;}
       var mPlan=[],mTrans=[],mDST={},idC=1;
-      var tripDays=dayCols.map(function(d,i){return{label:'Day'+(i+1),date:d.dateStr};});
+      var tripDays=dayCols.map(function(d,i){
+        var pts=d.dateStr.split('-');
+        return{label:'D'+(i+1),date:(pts[1]||'01')+'/'+(pts[2]||'01')};
+      });
       dayCols.forEach(function(day,di){
         var prevId=null;
         for(var r=1;r<rows.length;r++){
@@ -2142,7 +2145,7 @@ function doImportExcel(input){
           if(isTransit){
             var durMin=0;
             if(typeof costv==='string'){var dm=costv.match(/(\d+)\s*分/);if(dm)durMin=+dm[1];}
-            mTrans.push({id:idC++,fromId:prevId,dayIdx:di,mode:'train',durMin:durMin,cost:0,note:actStr});
+            mTrans.push({id:idC++,afterItemId:prevId,dayIdx:di,mode:'train',durMin:durMin,cost:0,note:actStr});
           }else{
             if(timeMin!==null&&mDST[di]==null)mDST[di]=timeMin;
             var cost=0;
