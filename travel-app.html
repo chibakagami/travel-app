@@ -13,20 +13,24 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
 :root{--sand:#FFF9C4;--warm:#FFE082;--terracotta:#CC0000;--terra-dark:#990000;--deep:#1a1a1a;--mid:#555;--light:#FFF9F0;--red:#CC0000;--blue:#3B4CCA;--shadow:0 4px 20px rgba(0,0,0,0.13);--radius:16px;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Noto Sans TC',sans-serif;background:var(--light);color:var(--deep);min-height:100vh;max-width:480px;margin:0 auto;}
 /* HOME */
-#home-screen{min-height:100vh;display:flex;flex-direction:column;overflow:hidden;background:#CC0000;}
+#home-screen{min-height:100vh;display:flex;flex-direction:column;overflow:hidden;background:#CC0000;position:relative;}
 .home-top{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px 50px;}
-.pokeball{width:110px;height:110px;border-radius:50%;background:white;position:relative;border:5px solid #1a1a1a;margin-bottom:20px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.3);}
+.pokeball{width:110px;height:110px;border-radius:50%;background:white;position:relative;border:5px solid #1a1a1a;margin-bottom:20px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.3);cursor:pointer;animation:pokeball-idle 2.5s ease-in-out infinite;}
+@keyframes pokeball-idle{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
 .pokeball-top{position:absolute;top:0;left:0;right:0;height:50%;background:#CC0000;}
 .pokeball-belt{position:absolute;left:0;right:0;top:50%;height:5px;background:#1a1a1a;transform:translateY(-50%);z-index:2;}
 .pokeball-btn{position:absolute;left:50%;top:50%;width:24px;height:24px;background:white;border:5px solid #1a1a1a;border-radius:50%;transform:translate(-50%,-50%);z-index:3;}
 .home-title{font-family:'Press Start 2P',monospace;color:white;font-size:14px;text-align:center;line-height:2;text-shadow:3px 3px 0 rgba(0,0,0,.3);}
 .home-sub{color:rgba(255,255,255,.7);font-size:13px;margin-top:8px;}
-.home-bottom{background:white;border-radius:32px 32px 0 0;padding:36px 24px 48px;display:flex;flex-direction:column;align-items:center;gap:14px;}
+.home-bottom{background:white;border-radius:32px 32px 0 0;padding:36px 24px 48px;display:flex;flex-direction:column;align-items:center;gap:14px;transform:translateY(100%);opacity:0;pointer-events:none;transition:transform .45s cubic-bezier(.34,1.56,.64,1),opacity .3s;}
+.home-bottom.visible{transform:translateY(0);opacity:1;pointer-events:auto;}
+.home-version{position:absolute;bottom:16px;right:16px;font-family:'Press Start 2P',monospace;font-size:9px;color:rgba(255,255,255,.35);pointer-events:none;letter-spacing:.05em;}
 .home-divider{width:50px;height:4px;background:#1a1a1a;border-radius:2px;margin-bottom:4px;}
 .btn-home{width:100%;max-width:320px;border:none;border-radius:14px;padding:18px 20px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;display:flex;align-items:center;gap:14px;text-align:left;}
 .btn-home-new{background:#CC0000;color:white;box-shadow:0 4px 0 #990000;}
@@ -268,10 +272,11 @@ select.field-input option{background:#880000;color:white;}
 <body>
 
 <input type="file" id="backup-file-input" accept=".json" style="display:none" onchange="doRestore(this)">
+<input type="file" id="xlsx-import-input" accept=".xlsx,.xls" style="display:none" onchange="doImportExcel(this)">
 <!-- HOME SCREEN -->
 <div id="home-screen" style="display:none">
   <div class="home-top">
-    <div class="pokeball">
+    <div class="pokeball" onclick="toggleHomeMenu()">
       <div class="pokeball-top"></div>
       <div class="pokeball-belt"></div>
       <div class="pokeball-btn"></div>
@@ -279,7 +284,7 @@ select.field-input option{background:#880000;color:white;}
     <div class="home-title">旅行計畫</div>
     <div class="home-sub">冒險從這裡開始！</div>
   </div>
-  <div class="home-bottom">
+  <div class="home-bottom" id="home-bottom">
     <div class="home-divider"></div>
     <button class="btn-home btn-home-new" onclick="startAdventure()">
       <span class="btn-home-icon">🗺️</span>
@@ -303,6 +308,7 @@ select.field-input option{background:#880000;color:white;}
       </div>
     </button>
   </div>
+  <div class="home-version">V1.00</div>
 </div>
 
 <div id="setup-screen">
@@ -445,7 +451,8 @@ select.field-input option{background:#880000;color:white;}
 <div id="memories-screen" style="display:none;min-height:100vh;flex-direction:column;background:var(--light)">
   <div style="background:#CC0000;padding:16px;display:flex;align-items:center;gap:12px;border-bottom:3px solid #990000;position:sticky;top:0;z-index:100">
     <button onclick="showHome()" style="background:rgba(255,255,255,.15);border:none;border-radius:10px;color:white;padding:8px 14px;font-family:'Noto Sans TC',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap">← 返回</button>
-    <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:white;line-height:1.7;text-shadow:1px 1px 0 rgba(0,0,0,.3)">⭐ 美好回憶</div>
+    <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:white;line-height:1.7;text-shadow:1px 1px 0 rgba(0,0,0,.3);flex:1">⭐ 美好回憶</div>
+    <button onclick="document.getElementById('xlsx-import-input').click()" style="background:rgba(255,255,255,.15);border:none;border-radius:10px;color:white;padding:8px 12px;font-family:'Noto Sans TC',sans-serif;font-size:12px;cursor:pointer;white-space:nowrap;flex-shrink:0">📥 匯入</button>
   </div>
   <div id="mem-list" style="padding:16px;flex:1"></div>
 </div>
@@ -600,7 +607,19 @@ function showHome(){
     var el=document.getElementById(id);if(el)el.style.display='none';
   });
   document.getElementById('home-screen').style.display='flex';
+  var hb=document.getElementById('home-bottom');
+  if(hb){hb.classList.remove('visible');}
+  var pb=document.querySelector('.pokeball');
+  if(pb)pb.style.animation='';
   updateHomeButtons();
+}
+function toggleHomeMenu(){
+  var el=document.getElementById('home-bottom');
+  if(!el)return;
+  var open=el.classList.toggle('visible');
+  var pb=document.querySelector('.pokeball');
+  if(pb)pb.style.animation=open?'none':'';
+  if(open)updateHomeButtons();
 }
 function showSetup(){
   document.getElementById('home-screen').style.display='none';
@@ -1963,6 +1982,78 @@ function removeMapPin(itemId){
   var pi=planItems.filter(function(p){return p.id===itemId;})[0];
   if(pi){delete pi.lat;delete pi.lng;saveData();}
   renderMapPins();renderTimeline();
+}
+
+/* ── EXCEL IMPORT ── */
+function doImportExcel(input){
+  var file=input.files[0];
+  if(!file){return;}
+  if(typeof XLSX==='undefined'){alert('Excel 解析器尚未載入，請稍後再試');input.value='';return;}
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null});
+      var row0=rows[0]||[];
+      // Find day date columns: every 3rd starting at col 2 (0-indexed)
+      var dayCols=[];
+      for(var c=2;c<row0.length;c+=3){
+        var cv=row0[c];
+        if(cv==null)continue;
+        var ds='';
+        if(cv instanceof Date){ds=cv.getFullYear()+'-'+(''+( cv.getMonth()+1)).padStart(2,'0')+'-'+(''+cv.getDate()).padStart(2,'0');}
+        else{ds=String(cv).replace(/\//g,'-').split('T')[0].split(' ')[0];}
+        if(ds)dayCols.push({dateStr:ds,col:c});
+      }
+      if(!dayCols.length){alert('找不到日期欄位，請確認第一列包含日期');input.value='';return;}
+      var mPlan=[],mTrans=[],mDST={},idC=1;
+      var tripDays=dayCols.map(function(d,i){return{label:'Day'+(i+1),date:d.dateStr};});
+      dayCols.forEach(function(day,di){
+        var prevId=null;
+        for(var r=1;r<rows.length;r++){
+          var row=rows[r]||[];
+          var tv=row[day.col],av=row[day.col+1],costv=row[day.col+2];
+          if(av==null||av==='')continue;
+          var actStr=String(av).trim();
+          if(!actStr)continue;
+          // Extract time
+          var timeMin=null;
+          if(tv instanceof Date){timeMin=tv.getHours()*60+tv.getMinutes();}
+          else if(typeof tv==='number'&&tv>0&&tv<1){var tot=Math.round(tv*1440);timeMin=tot;}
+          else if(typeof tv==='string'){var tm=tv.match(/(\d{1,2}):(\d{2})/);if(tm)timeMin=+tm[1]*60+ +tm[2];}
+          // Transit detection: contains → and looks like a route
+          var isTransit=/→/.test(actStr)&&prevId!==null;
+          if(isTransit){
+            var durMin=0;
+            if(typeof costv==='string'){var dm=costv.match(/(\d+)\s*分/);if(dm)durMin=+dm[1];}
+            mTrans.push({id:idC++,fromId:prevId,dayIdx:di,mode:'train',durMin:durMin,cost:0,note:actStr});
+          }else{
+            if(timeMin!==null&&mDST[di]==null)mDST[di]=timeMin;
+            var cost=0;
+            if(typeof costv==='number')cost=Math.round(costv);
+            else if(typeof costv==='string'){var cn=costv.replace(/[^\d.]/g,'');if(cn)cost=Math.round(+cn);}
+            var ord=mPlan.filter(function(p){return p.dayIdx===di;}).length;
+            var itemId=idC++;
+            mPlan.push({id:itemId,dayIdx:di,name:actStr,cat:'🎪 體驗',note:'',stayMin:60,order:ord});
+            prevId=itemId;
+          }
+        }
+      });
+      var tripName=file.name.replace(/\.[^.]+$/,'');
+      memories.push({
+        id:Date.now(),archivedAt:new Date().toISOString().split('T')[0],
+        trip:{dest:tripName,startDate:dayCols[0].dateStr,endDate:dayCols[dayCols.length-1].dateStr,currency:'JPY',days:tripDays},
+        planItems:mPlan,transports:mTrans,flights:[],expenses:[],
+        dayStartTimes:mDST,exchangeRate:null
+      });
+      saveMemories();
+      renderMemories();
+      alert('✅ 已匯入 '+dayCols.length+' 天、'+mPlan.length+' 個行程到美好回憶！');
+    }catch(err){alert('匯入失敗：'+err.message);}
+    input.value='';
+  };
+  reader.readAsArrayBuffer(file);
 }
 </script>
 </body>
