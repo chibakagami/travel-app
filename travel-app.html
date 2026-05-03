@@ -267,16 +267,28 @@ select.field-input option{background:#880000;color:white;}
 .pin-set-btn{font-size:11px;padding:3px 8px;background:rgba(59,76,202,.12);border:1px solid rgba(59,76,202,.25);color:#3B4CCA;border-radius:6px;cursor:pointer;margin-top:6px;font-family:'Noto Sans TC',sans-serif;}
 .pin-remove-btn{font-size:11px;padding:3px 8px;background:rgba(204,0,0,.1);border:1px solid rgba(204,0,0,.2);color:#CC0000;border-radius:6px;cursor:pointer;margin-top:6px;font-family:'Noto Sans TC',sans-serif;}
 .map-tc-label{background:white;border:1.5px solid #ddd;border-radius:20px;padding:2px 8px;font-size:11px;font-family:'Noto Sans TC',sans-serif;color:#333;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.15);text-align:center;line-height:1.4;}
+/* PREP TAB */
+.prep-progress{background:white;border-radius:12px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow);}
+.prep-prog-bar{flex:1;height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;}
+.prep-prog-fill{height:100%;background:#CC0000;border-radius:4px;transition:width .3s;}
+.prep-cat-group{margin-bottom:20px;}
+.prep-cat-title{font-size:11px;font-weight:700;color:var(--mid);letter-spacing:.08em;text-transform:uppercase;padding:10px 0 8px;border-bottom:2px solid var(--warm);margin-bottom:10px;}
+.prep-item{display:flex;align-items:center;gap:10px;background:white;border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow);}
+.prep-check{width:22px;height:22px;accent-color:#CC0000;cursor:pointer;flex-shrink:0;}
+.prep-item-label{flex:1;font-size:14px;cursor:pointer;line-height:1.4;}
+.prep-done{text-decoration:line-through;opacity:.45;}
+.prep-del-btn{background:none;border:none;color:#CC0000;font-size:13px;padding:4px 6px;cursor:pointer;opacity:.5;flex-shrink:0;}
+.prep-add-row{display:flex;gap:8px;margin-top:16px;padding-top:16px;border-top:2px solid var(--warm);}
 </style>
 </head>
 <body>
 
 <input type="file" id="backup-file-input" accept=".json" style="display:none" onchange="doRestore(this)">
-<input type="file" id="xlsx-import-input" accept=".xlsx,.xls" style="display:none" onchange="doImportExcel(this)">
+<input type="file" id="xlsx-import-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="doImportFile(this)">
 <!-- HOME SCREEN -->
-<div id="home-screen" style="display:none">
+<div id="home-screen" style="display:none" onclick="closeHomeMenu()">
   <div class="home-top">
-    <div class="pokeball" onclick="toggleHomeMenu()">
+    <div class="pokeball" onclick="toggleHomeMenu(event)">
       <div class="pokeball-top"></div>
       <div class="pokeball-belt"></div>
       <div class="pokeball-btn"></div>
@@ -284,7 +296,7 @@ select.field-input option{background:#880000;color:white;}
     <div class="home-title">旅行計畫</div>
     <div class="home-sub">冒險從這裡開始！</div>
   </div>
-  <div class="home-bottom" id="home-bottom">
+  <div class="home-bottom" id="home-bottom" onclick="event.stopPropagation()">
     <div class="home-divider"></div>
     <button class="btn-home btn-home-new" onclick="startAdventure()">
       <span class="btn-home-icon">🗺️</span>
@@ -308,7 +320,7 @@ select.field-input option{background:#880000;color:white;}
       </div>
     </button>
   </div>
-  <div class="home-version">V1.00</div>
+  <div class="home-version">V1.01</div>
 </div>
 
 <div id="setup-screen">
@@ -439,7 +451,17 @@ select.field-input option{background:#880000;color:white;}
     <div id="map-container" style="height:calc(100vh - 160px)"></div>
   </div>
 
+  <div class="tab-content" id="tab-prep">
+    <div class="prep-progress">
+      <span style="font-size:13px;color:var(--mid);white-space:nowrap;font-weight:600">出發準備</span>
+      <div class="prep-prog-bar"><div class="prep-prog-fill" id="prep-prog-fill" style="width:0%"></div></div>
+      <span id="prep-prog-txt" style="font-size:12px;color:var(--mid);white-space:nowrap">0 / 0</span>
+    </div>
+    <div id="prep-list"></div>
+  </div>
+
   <div class="tab-bar">
+    <button class="tab-btn" onclick="switchTab('prep',this)"><span class="tab-icon">✅</span>準備</button>
     <button class="tab-btn active" onclick="switchTab('plan',this)"><span class="tab-icon">📅</span>行程</button>
     <button class="tab-btn" id="tab-map-btn" onclick="switchTab('map',this)"><span class="tab-icon">🗺️</span>地圖</button>
     <button class="tab-btn" onclick="switchTab('expense',this)"><span class="tab-icon">💰</span>記帳</button>
@@ -531,6 +553,14 @@ var addExpCatSelected=null;
 var stayH=1,stayM=0;
 var tcDrums={};
 var dayStartTimes={};// {dayIdx: minutes}
+var prepItems=[];
+var PREP_DEFAULTS=[
+  {cat:'📋 證件',items:['護照','簽證','身分證影本','機票確認信']},
+  {cat:'💳 金融',items:['信用卡','現金','外幣換好','行動支付設定']},
+  {cat:'💊 健康',items:['常備藥','旅遊保險','急救包']},
+  {cat:'🔌 3C',items:['充電器','萬用轉接頭','行動電源','相機']},
+  {cat:'🎒 行李',items:['換洗衣物','盥洗用品','雨傘','防曬乳']},
+];
 
 var MODES=[
   {key:'walk',icon:'🚶',label:'步行'},{key:'metro',icon:'🚇',label:'地鐵'},
@@ -613,13 +643,22 @@ function showHome(){
   if(pb)pb.style.animation='';
   updateHomeButtons();
 }
-function toggleHomeMenu(){
+function toggleHomeMenu(e){
+  if(e)e.stopPropagation();
   var el=document.getElementById('home-bottom');
   if(!el)return;
   var open=el.classList.toggle('visible');
   var pb=document.querySelector('.pokeball');
   if(pb)pb.style.animation=open?'none':'';
   if(open)updateHomeButtons();
+}
+function closeHomeMenu(){
+  var el=document.getElementById('home-bottom');
+  if(el&&el.classList.contains('visible')){
+    el.classList.remove('visible');
+    var pb=document.querySelector('.pokeball');
+    if(pb)pb.style.animation='';
+  }
 }
 function showSetup(){
   document.getElementById('home-screen').style.display='none';
@@ -663,9 +702,9 @@ function archiveCurrentToMemory(){
 }
 function clearTripData(){
   trip={dest:'',startDate:'',endDate:'',currency:'JPY',days:[]};
-  planItems=[];transports=[];flights=[];expenses=[];dayStartTimes={};
+  planItems=[];transports=[];flights=[];expenses=[];dayStartTimes={};prepItems=[];
   currentDay=0;exchangeRate=null;_id=1;editMode=false;
-  ['tv_trip','tv_plans','tv_tc','tv_flights','tv_exp','tv_id','tv_dst'].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+  ['tv_trip','tv_plans','tv_tc','tv_flights','tv_exp','tv_id','tv_dst','tv_prep'].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
 }
 
 /* ── MEMORIES ── */
@@ -724,10 +763,7 @@ function closeMemExportMenu(){
 function exportMemCSV(){
   var mem=memories.filter(function(m){return m.id===currentMemId;})[0];if(!mem)return;
   closeMemExportMenu();
-  var _t=trip,_fl=flights,_pi=planItems,_tr=transports,_ex=expenses,_r=exchangeRate;
-  trip=mem.trip;flights=mem.flights;planItems=mem.planItems;transports=mem.transports;expenses=mem.expenses;exchangeRate=mem.exchangeRate||null;
-  exportCSV();
-  trip=_t;flights=_fl;planItems=_pi;transports=_tr;expenses=_ex;exchangeRate=_r;
+  exportTripData(mem.trip,mem.planItems,mem.transports,mem.flights,mem.expenses,(mem.trip.dest||'回憶')+'_行程');
 }
 function exportMemPDF(){
   var mem=memories.filter(function(m){return m.id===currentMemId;})[0];if(!mem)return;
@@ -755,6 +791,7 @@ function copyMemToTrip(){
   transports.forEach(function(x){if(x.id>maxId)maxId=x.id;});
   flights.forEach(function(x){if(x.id>maxId)maxId=x.id;});
   _id=maxId+1;
+  initPrepDefaults();
   saveData();
   closeMemView();
   showApp();renderAll();
@@ -914,6 +951,7 @@ function startTrip(){
   if(!dest){alert('請輸入目的地');return;}if(!s||!e){alert('請選擇日期');return;}if(s>e){alert('日期有誤');return;}
   var budget=+(document.getElementById('budget-input').value)||0;
   trip={dest:dest,startDate:s,endDate:e,currency:c,days:genDays(s,e),budget:budget};
+  initPrepDefaults();
   showApp();renderAll();fetchRate(c);saveData();
 }
 function genDays(s,e){
@@ -1461,65 +1499,53 @@ function closeAppMenu(){
   if(m)m.style.display='none';
 }
 
-function exportCSV(){
-  closeExportModal();
-  var rows=[];
-  rows.push(['旅行計畫：'+trip.dest]);
-  rows.push(['期間：'+trip.startDate+' → '+trip.endDate]);
-  rows.push([]);
-  if(flights.length){
-    rows.push(['=== 航班 ===']);
-    rows.push(['日期','出發機場','抵達機場','航空公司','航班號','起飛','降落']);
-    flights.forEach(function(f){
-      var day=trip.days[f.dayIdx];
-      rows.push([day?day.label+' '+day.date:'',f.dep,f.arr,f.airline,f.num,f.depTime,f.arrTime]);
-    });
-    rows.push([]);
-  }
-  rows.push(['=== 行程 ===']);
-  trip.days.forEach(function(d,di){
-    var dayItems=planItems.filter(function(p){return p.dayIdx===di;});
-    if(!dayItems.length)return;
-    rows.push([d.label+' '+d.date]);
-    rows.push(['開始時間','結束時間','景點/活動','分類','停留時間','備註','→ 交通方式','交通時間']);
-    var times=computeTimes(di);
-    times.forEach(function(t,idx){
-      var tc=getTcForDay(t.id,di);
-      var mode=tc?MODES.find(function(m){return m.key===tc.mode;})||MODES[0]:null;
-      rows.push([
-        m2t(t.startMin),t.endMin!=null?m2t(t.endMin):'',
-        t.name,t.cat,t.stay?stayTxt(t.stay):'',t.note||'',
-        mode&&idx<times.length-1?mode.label:'',
-        tc&&idx<times.length-1?durTxt(tc.durMin):''
-      ]);
-    });
-    rows.push([]);
+/* ── CSV EXPORT/IMPORT ── */
+function csvCell(s){s=''+(s==null?'':s);if(/[,"\n]/.test(s))s='"'+s.replace(/"/g,'""')+'"';return s;}
+function csvRow(arr){return arr.map(csvCell).join(',');}
+function exportTripData(tObj,pItems,tcs,fls,exps,fname){
+  var lines=[];
+  lines.push('[META]');
+  lines.push(csvRow(['旅行名稱',tObj.dest||'']));
+  lines.push(csvRow(['出發日期',tObj.startDate||'']));
+  lines.push(csvRow(['回程日期',tObj.endDate||'']));
+  lines.push(csvRow(['貨幣',tObj.currency||'JPY']));
+  lines.push('');
+  lines.push('[行程]');
+  lines.push(csvRow(['天數','名稱','類別','備註','停留(分)','緯度','經度']));
+  pItems.slice().sort(function(a,b){return a.dayIdx-b.dayIdx||a.order-b.order;}).forEach(function(p){
+    lines.push(csvRow([p.dayIdx+1,p.name,p.cat,p.note||'',p.stayMin||0,p.lat!=null?p.lat:'',p.lng!=null?p.lng:'']));
   });
-  rows.push(['=== 記帳 ===']);
-  rows.push(['日期','項目','金額('+trip.currency+')','分類','台幣換算']);
-  var total=0;
-  expenses.forEach(function(e){
-    var day=trip.days[e.dayIdx];
-    var twd=exchangeRate?Math.round(e.amount*exchangeRate):'';
-    rows.push([day?day.label+' '+day.date:'',e.name,e.amount,e.cat,twd?'NT$ '+twd:'']);
-    total+=e.amount;
+  lines.push('');
+  lines.push('[交通]');
+  lines.push(csvRow(['天數','行程順序','交通方式','時間(分)','費用']));
+  tcs.forEach(function(tc){
+    var dayItems=pItems.filter(function(p){return p.dayIdx===tc.dayIdx;}).sort(function(a,b){return a.order-b.order;});
+    var fromIdx=dayItems.findIndex(function(p){return p.id===tc.fromId;});
+    if(fromIdx<0)return;
+    lines.push(csvRow([tc.dayIdx+1,fromIdx+1,tc.mode||'walk',tc.durMin||0,tc.cost||0]));
   });
-  if(expenses.length)rows.push(['合計','',total,'',exchangeRate?'NT$ '+Math.round(total*exchangeRate):'']);
-
-  var csv=rows.map(function(r){
-    return r.map(function(cell){
-      var s=''+(cell==null?'':cell);
-      if(/[,"\n]/.test(s))s='"'+s.replace(/"/g,'""')+'"';
-      return s;
-    }).join(',');
-  }).join('\n');
-
-  var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  lines.push('');
+  lines.push('[航班]');
+  lines.push(csvRow(['天數','出發機場','抵達機場','航空','班號','起飛','降落']));
+  fls.forEach(function(f){
+    lines.push(csvRow([f.dayIdx+1,f.dep||'',f.arr||'',f.airline||'',f.num||'',f.depTime||'',f.arrTime||'']));
+  });
+  lines.push('');
+  lines.push('[花費]');
+  lines.push(csvRow(['天數','類別','名稱','金額']));
+  exps.forEach(function(e){
+    lines.push(csvRow([e.dayIdx+1,e.cat||'',e.name||'',e.amount||0]));
+  });
+  var blob=new Blob(['\uFEFF'+lines.join('\n')],{type:'text/csv;charset=utf-8'});
   var url=URL.createObjectURL(blob);
   var a=document.createElement('a');
-  a.href=url;a.download=trip.dest+'_行程.csv';
+  a.href=url;a.download=(fname||'trip')+'.csv';
   document.body.appendChild(a);a.click();
   setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},500);
+}
+function exportCSV(){
+  closeExportModal();
+  exportTripData(trip,planItems,transports,flights,expenses,trip.dest+'_行程');
 }
 
 function exportPDF(){
@@ -1703,6 +1729,7 @@ function switchTab(tab,btn){
   var fab=document.getElementById('exp-fab');
   if(fab){if(tab==='expense'&&editMode)fab.classList.add('show');else fab.classList.remove('show');}
   if(tab==='expense'){expViewDay=currentDay;expCatFilter=null;renderExpenses();}
+  if(tab==='prep'){renderPrep();}
   if(tab==='map'){
     mapViewDay=currentDay;
     renderMapDayTabs();
@@ -1720,6 +1747,7 @@ function saveData(){
     localStorage.setItem('tv_exp',JSON.stringify(expenses));
     localStorage.setItem('tv_id',''+_id);
     localStorage.setItem('tv_dst',JSON.stringify(dayStartTimes));
+    localStorage.setItem('tv_prep',JSON.stringify(prepItems));
   }catch(e){}
 }
 function loadData(){
@@ -1732,15 +1760,17 @@ function loadData(){
     expenses=JSON.parse(localStorage.getItem('tv_exp')||'[]');
     _id=+(localStorage.getItem('tv_id')||'1');
     dayStartTimes=JSON.parse(localStorage.getItem('tv_dst')||'{}');
+    prepItems=JSON.parse(localStorage.getItem('tv_prep')||'[]');
+    if(!prepItems.length)initPrepDefaults();
     return true;
   }catch(e){return false;}
 }
 function resetTrip(){
   if(!confirm('確定清除所有資料？'))return;
-  planItems=[];transports=[];flights=[];expenses=[];dayStartTimes={};
+  planItems=[];transports=[];flights=[];expenses=[];dayStartTimes={};prepItems=[];
   currentDay=0;exchangeRate=null;_id=1;editMode=false;
   trip={dest:'',startDate:'',endDate:'',currency:'JPY',days:[]};
-  ['tv_trip','tv_plans','tv_tc','tv_flights','tv_exp','tv_id','tv_dst'].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+  ['tv_trip','tv_plans','tv_tc','tv_flights','tv_exp','tv_id','tv_dst','tv_prep'].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
   showHome();
 }
 
@@ -1984,6 +2014,91 @@ function removeMapPin(itemId){
   renderMapPins();renderTimeline();
 }
 
+/* ── FILE IMPORT (CSV + XLSX) ── */
+function parseCsvRow(line){
+  var res=[],cur='',inQ=false;
+  for(var i=0;i<line.length;i++){
+    var c=line[i];
+    if(c==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}
+    else if(c===','&&!inQ){res.push(cur);cur='';}
+    else cur+=c;
+  }
+  res.push(cur);return res;
+}
+function importCSVData(text){
+  var sections={},current=null,curRows=[];
+  text.replace(/^﻿/,'').replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').forEach(function(line){
+    var t=line.trim();
+    if(!t){if(current&&curRows.length){sections[current]=curRows;curRows=[];}return;}
+    if(/^\[(META|行程|交通|航班|花費)\]$/.test(t)){
+      if(current&&curRows.length)sections[current]=curRows;
+      current=t.slice(1,-1);curRows=[];return;
+    }
+    if(current)curRows.push(parseCsvRow(t));
+  });
+  if(current&&curRows.length)sections[current]=curRows;
+  var meta={};
+  (sections['META']||[]).forEach(function(r){if(r[0]&&r[1]!=null)meta[r[0]]=r[1];});
+  if(!meta['旅行名稱']&&!meta['出發日期'])return null;
+  var idC=1,mPlan=[],mTrans=[],mFlights=[],mExp=[];
+  (sections['行程']||[]).slice(1).forEach(function(r){
+    if(!r[1])return;
+    var di=Math.max(0,(+r[0]||1)-1);
+    var ord=mPlan.filter(function(p){return p.dayIdx===di;}).length;
+    var item={id:idC++,dayIdx:di,name:r[1],cat:r[2]||'🎪 體驗',note:r[3]||'',stayMin:+r[4]||60,order:ord};
+    if(r[5]&&r[6]){item.lat=+r[5];item.lng=+r[6];}
+    mPlan.push(item);
+  });
+  (sections['交通']||[]).slice(1).forEach(function(r){
+    var di=Math.max(0,(+r[0]||1)-1);
+    var dayItems=mPlan.filter(function(p){return p.dayIdx===di;}).sort(function(a,b){return a.order-b.order;});
+    var fromItem=dayItems[Math.max(0,(+r[1]||1)-1)];
+    if(!fromItem)return;
+    mTrans.push({id:idC++,fromId:fromItem.id,dayIdx:di,mode:r[2]||'walk',durMin:+r[3]||0,cost:+r[4]||0});
+  });
+  (sections['航班']||[]).slice(1).forEach(function(r){
+    if(!r[1])return;
+    var di=Math.max(0,(+r[0]||1)-1);
+    mFlights.push({id:idC++,dayIdx:di,dep:r[1]||'',arr:r[2]||'',airline:r[3]||'',num:r[4]||'',depTime:r[5]||'',arrTime:r[6]||''});
+  });
+  (sections['花費']||[]).slice(1).forEach(function(r){
+    if(!r[2])return;
+    var di=Math.max(0,(+r[0]||1)-1);
+    mExp.push({dayIdx:di,cat:r[1]||'',name:r[2]||'',amount:+r[3]||0});
+  });
+  var maxDay=0;
+  mPlan.forEach(function(p){if(p.dayIdx>maxDay)maxDay=p.dayIdx;});
+  mFlights.forEach(function(f){if(f.dayIdx>maxDay)maxDay=f.dayIdx;});
+  var days=[];
+  var sd=meta['出發日期']||new Date().toISOString().split('T')[0];
+  for(var i=0;i<=maxDay;i++){
+    var d=new Date(sd+'T00:00:00');d.setDate(d.getDate()+i);
+    days.push({label:'Day'+(i+1),date:d.toISOString().split('T')[0]});
+  }
+  return{trip:{dest:meta['旅行名稱']||'匯入行程',startDate:meta['出發日期']||'',endDate:meta['回程日期']||'',currency:meta['貨幣']||'JPY',days:days},
+    planItems:mPlan,transports:mTrans,flights:mFlights,expenses:mExp};
+}
+function doImportFile(input){
+  var file=input.files[0];if(!file)return;
+  var ext=file.name.split('.').pop().toLowerCase();
+  if(ext==='csv'){
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var data=importCSVData(e.target.result);
+      if(!data){alert('無法解析 CSV，請確認為本 App 匯出的行程格式');input.value='';return;}
+      memories.push({id:Date.now(),archivedAt:new Date().toISOString().split('T')[0],
+        trip:data.trip,planItems:data.planItems,transports:data.transports,
+        flights:data.flights,expenses:data.expenses,dayStartTimes:{},exchangeRate:null});
+      saveMemories();renderMemories();
+      alert('✅ 已匯入「'+data.trip.dest+'」到美好回憶！');
+      input.value='';
+    };
+    reader.readAsText(file,'UTF-8');
+  } else {
+    doImportExcel(input);
+  }
+}
+
 /* ── EXCEL IMPORT ── */
 function doImportExcel(input){
   var file=input.files[0];
@@ -2054,6 +2169,67 @@ function doImportExcel(input){
     input.value='';
   };
   reader.readAsArrayBuffer(file);
+}
+
+/* ── PREP TAB ── */
+function initPrepDefaults(){
+  var idC=1;
+  prepItems=[];
+  PREP_DEFAULTS.forEach(function(g){
+    g.items.forEach(function(label){
+      prepItems.push({id:idC++,cat:g.cat,label:label,checked:false,custom:false});
+    });
+  });
+}
+function renderPrep(){
+  var el=document.getElementById('prep-list');if(!el)return;
+  var total=prepItems.length,done=prepItems.filter(function(i){return i.checked;}).length;
+  var pct=total?Math.round(done/total*100):0;
+  var pf=document.getElementById('prep-prog-fill');
+  var pt=document.getElementById('prep-prog-txt');
+  if(pf)pf.style.width=pct+'%';
+  if(pt)pt.textContent=done+' / '+total;
+  var cats={},catOrder=[];
+  prepItems.forEach(function(item){
+    if(!cats[item.cat]){cats[item.cat]=[];catOrder.push(item.cat);}
+    cats[item.cat].push(item);
+  });
+  var html='';
+  catOrder.forEach(function(cat){
+    html+='<div class="prep-cat-group"><div class="prep-cat-title">'+escHtml(cat)+'</div>';
+    cats[cat].forEach(function(item){
+      html+='<div class="prep-item">'+
+        '<input type="checkbox" class="prep-check"'+(item.checked?' checked':'')+' onchange="togglePrepItem('+item.id+',this.checked)">'+
+        '<span class="prep-item-label'+(item.checked?' prep-done':'')+'">'+escHtml(item.label)+'</span>'+
+        (item.custom?'<button class="prep-del-btn" onclick="deletePrepItem('+item.id+')">✕</button>':'')+
+      '</div>';
+    });
+    html+='</div>';
+  });
+  var catOpts=PREP_DEFAULTS.map(function(g){return'<option>'+g.cat+'</option>';}).join('');
+  html+='<div class="prep-add-row">'+
+    '<select id="prep-new-cat" class="form-input" style="flex:0 0 auto;width:120px;font-size:12px">'+catOpts+'</select>'+
+    '<input id="prep-new-input" class="form-input" placeholder="新增項目..." style="flex:1">'+
+    '<button onclick="addPrepItem()" class="btn-add" style="margin:0;padding:10px 14px;white-space:nowrap">＋</button>'+
+  '</div>';
+  el.innerHTML=html;
+}
+function togglePrepItem(id,checked){
+  var item=prepItems.filter(function(i){return i.id===id;})[0];
+  if(item){item.checked=checked;saveData();renderPrep();}
+}
+function addPrepItem(){
+  var input=document.getElementById('prep-new-input');
+  var catEl=document.getElementById('prep-new-cat');
+  if(!input||!input.value.trim())return;
+  var maxId=prepItems.reduce(function(m,i){return Math.max(m,i.id);},0);
+  prepItems.push({id:maxId+1,cat:catEl?catEl.value:PREP_DEFAULTS[0].cat,label:input.value.trim(),checked:false,custom:true});
+  input.value='';
+  saveData();renderPrep();
+}
+function deletePrepItem(id){
+  prepItems=prepItems.filter(function(i){return i.id!==id;});
+  saveData();renderPrep();
 }
 </script>
 </body>
