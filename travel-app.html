@@ -129,6 +129,8 @@ select.field-input option{background:#880000;color:white;}
 .plan-name{font-size:15px;font-weight:600;color:var(--deep);margin-bottom:4px;}
 .plan-note-txt{font-size:12px;color:var(--mid);line-height:1.4;margin-bottom:4px;}
 .plan-tags{display:flex;flex-wrap:wrap;gap:6px;}
+.plan-maps-link{font-size:11px;color:#3B4CCA;display:inline-flex;align-items:center;gap:3px;margin-top:5px;text-decoration:none;opacity:.85;font-weight:500;}
+.plan-maps-link:active{opacity:1;}
 .tag{font-size:11px;padding:2px 8px;border-radius:20px;}
 .tag-cat{background:#FFE082;color:#7B5800;}
 .tag-stay{background:rgba(204,0,0,.1);color:#CC0000;}
@@ -294,7 +296,7 @@ select.field-input option{background:#880000;color:white;}
       </div>
     </button>
     <button class="btn-home btn-home-mem" onclick="showMemories()">
-      <span class="btn-home-icon">⭐</span>
+      <span class="btn-home-icon">📸</span>
       <div>
         <div class="btn-home-label">美好回憶</div>
         <div class="btn-home-sub">回顧你的旅行紀錄</div>
@@ -1092,10 +1094,11 @@ function renderTimeline(){
         (editMode?'<div class="drag-handle" draggable="true" data-id="'+item.id+'" ondragstart="onDragStart(event,'+item.id+')" ondragend="onDragEnd(event)" ontouchstart="onTouchStart(event,'+item.id+')" ontouchmove="onTouchMove(event)" ontouchend="onTouchEnd(event)">⠿</div>':'')+
         '<div class="plan-time-col"><div class="plan-time">'+startT+'</div>'+(endT?'<div class="plan-end-time">↓'+endT+'</div>':'')+
         '</div><div class="plan-body">'+
-        '<div class="plan-name">'+(hasPin?'📍 ':'')+item.name+'</div>'+
+        '<div class="plan-name">'+item.name+'</div>'+
         (item.note?'<div class="plan-note-txt">'+item.note+'</div>':'')+
         '<div class="plan-tags"><span class="tag tag-cat">'+item.cat+'</span>'+(item.stay?'<span class="tag tag-stay">⏱ '+stayTxt(item.stay)+'</span>':'')+
         '</div>'+
+        (function(){var url=pi&&pi.lat!=null?'https://maps.google.com/maps?q='+pi.lat+','+pi.lng:'https://www.google.com/maps/search/'+encodeURIComponent(item.name);return'<a class="plan-maps-link" href="'+url+'" target="_blank" rel="noopener">📍 Google 地圖</a>';})()+
         '</div>'+
         (editMode?'<div class="plan-actions">'+
           '<button class="plan-edit-btn" onclick="toggleEditPanel('+item.id+')">✏️</button>'+
