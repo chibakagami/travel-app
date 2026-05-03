@@ -1082,7 +1082,18 @@ function renderTimeline(){
     wrap.innerHTML='<div class="empty"><div class="empty-icon">📝</div><div class="empty-text">'+(editMode?'新增第一個行程吧！':'尚無行程，點右上 ✏️ 編輯新增')+'</div></div>';
     return;
   }
-  var html='';
+  var startHtml='';
+  if(editMode){
+    var hasDayFlights=flights.some(function(f){return f.dayIdx===currentDay;});
+    if(!hasDayFlights){
+      var curStart=getFirstStartMin();if(curStart==null)curStart=9*60;
+      startHtml='<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;background:white;border-radius:12px;padding:10px 14px;box-shadow:var(--shadow)">'+
+        '<span style="font-size:12px;color:var(--mid);flex:1">⏰ 當天起始時間</span>'+
+        '<input type="time" value="'+m2t(curStart)+'" onchange="setDayStartTime(this.value)" style="font-size:13px;border:1.5px solid #FFE082;border-radius:8px;padding:4px 8px;font-family:\'Share Tech Mono\',monospace;color:var(--deep);background:var(--light);outline:none;cursor:pointer">'+
+      '</div>';
+    }
+  }
+  var html=startHtml;
   items.forEach(function(item,idx){
     var startT=m2t(item.startMin),endT=item.endMin!=null?m2t(item.endMin):null;
     var isEditOpen=editMode&&openEditId===item.id;
@@ -1256,6 +1267,7 @@ function delPlan(id){
   planItems.filter(function(p){return p.dayIdx===currentDay;}).sort(function(a,b){return a.order-b.order;}).forEach(function(p,i){p.order=i;});
   renderTimeline();saveData();
 }
+function setDayStartTime(val){dayStartTimes[currentDay]=t2m(val);saveData();renderTimeline();}
 function toggleCopyPanel(id){openCopyId=openCopyId===id?null:id;openEditId=null;renderTimeline();}
 function copyPlanToDay(itemId,targetDay){
   var item=planItems.filter(function(p){return p.id===itemId;})[0];if(!item)return;
