@@ -281,7 +281,7 @@ select.field-input option{background:#880000;color:white;}
 .prep-add-row{display:flex;gap:8px;margin-top:16px;padding-top:16px;border-top:2px solid var(--warm);}
 /* LIST SUB-TABS */
 .list-sub-tabs{display:flex;background:white;border-radius:12px;padding:4px;margin-bottom:16px;box-shadow:var(--shadow);gap:4px;}
-.list-sub-btn{flex:1;background:none;border:none;border-radius:9px;padding:10px;font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;transition:all .2s;}
+.list-sub-btn{flex:1;background:none;border:none;border-radius:9px;padding:10px;font-family:var(--sans,sans-serif);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;transition:all .2s;}
 .list-sub-btn.active{background:#CC0000;color:white;}
 /* WISH LIST */
 .wish-type-header{font-size:11px;font-weight:700;color:var(--mid);letter-spacing:.08em;text-transform:uppercase;padding:10px 0 8px;border-bottom:2px solid var(--warm);margin-bottom:10px;}
@@ -478,8 +478,8 @@ select.field-input option{background:#880000;color:white;}
 
   <div class="tab-content" id="tab-prep">
     <div class="list-sub-tabs">
-      <button class="list-sub-btn active" id="list-sub-prep" onclick="switchListTab('prep')">✅ 出發準備</button>
-      <button class="list-sub-btn" id="list-sub-wish" onclick="switchListTab('wish')">🍜 美食/伴手禮</button>
+      <button class="list-sub-btn active" id="list-sub-prep" onclick="switchListTab('prep')">&#x2705; 出發準備</button>
+      <button class="list-sub-btn" id="list-sub-wish" onclick="switchListTab('wish')">&#x1F35C; 美食/伴手禮</button>
     </div>
     <div id="list-section-prep">
       <div class="prep-progress">
@@ -499,11 +499,11 @@ select.field-input option{background:#880000;color:white;}
   </div>
 
   <div class="tab-bar">
-    <button class="tab-btn" onclick="switchTab('prep',this)"><span class="tab-icon">📋</span>清單</button>
-    <button class="tab-btn active" onclick="switchTab('plan',this)"><span class="tab-icon">📅</span>行程</button>
-    <button class="tab-btn" id="tab-map-btn" onclick="switchTab('map',this)"><span class="tab-icon">🗺️</span>地圖</button>
-    <button class="tab-btn" onclick="switchTab('expense',this)"><span class="tab-icon">💰</span>記帳</button>
-    <button class="tab-btn" onclick="switchTab('pokecenter',this)"><span class="tab-icon">🔴</span>中心</button>
+    <button class="tab-btn" onclick="switchTab('prep',this)"><span class="tab-icon">&#x1F4CB;</span>清單</button>
+    <button class="tab-btn active" onclick="switchTab('plan',this)"><span class="tab-icon">&#x1F4C5;</span>行程</button>
+    <button class="tab-btn" id="tab-map-btn" onclick="switchTab('map',this)"><span class="tab-icon">&#x1F5FA;&#xFE0F;</span>地圖</button>
+    <button class="tab-btn" onclick="switchTab('expense',this)"><span class="tab-icon">&#x1F4B0;</span>記帳</button>
+    <button class="tab-btn" onclick="switchTab('pokecenter',this)"><span class="tab-icon">&#x1F534;</span>中心</button>
   </div>
 </div>
 
@@ -1250,9 +1250,7 @@ function renderTimeline(){
             (function(){
               var sdi=planItems.filter(function(p){return p.dayIdx===currentDay;}).sort(function(a,b){return a.order-b.order;});
               var btns='<button class="day-tab" style="font-size:11px;padding:5px 10px;white-space:nowrap" onclick="insertPlanSameDay('+item.id+',-1)">最前面</button>';
-              sdi.forEach(function(sitem){
-                btns+='<button class="day-tab" style="font-size:11px;padding:5px 10px;white-space:nowrap" onclick="insertPlanSameDay('+item.id+','+sitem.order+')">'+escHtml(sitem.name.slice(0,6))+'後</button>';
-              });
+              sdi.forEach(function(sitem){btns+='<button class="day-tab" style="font-size:11px;padding:5px 10px;white-space:nowrap" onclick="insertPlanSameDay('+item.id+','+sitem.order+')">'+escHtml(sitem.name.slice(0,6))+'後</button>';});
               return btns;
             })()+
           '</div>'+
@@ -1655,32 +1653,7 @@ function exportPDF(){
       'td{padding:8px 10px;font-size:13px;border-bottom:1px solid #E8D5B0;}'+
       'tr.total td{font-weight:700;background:#FAF6EE;}'+
       '@media print{body{padding:16px;}}'+
-    '/* LIST SUB-TABS */
-.list-sub-tabs{display:flex;background:white;border-radius:12px;padding:4px;margin-bottom:16px;box-shadow:var(--shadow);gap:4px;}
-.list-sub-btn{flex:1;background:none;border:none;border-radius:9px;padding:10px;font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;transition:all .2s;}
-.list-sub-btn.active{background:#CC0000;color:white;}
-/* WISH LIST */
-.wish-type-header{font-size:11px;font-weight:700;color:var(--mid);letter-spacing:.08em;text-transform:uppercase;padding:10px 0 8px;border-bottom:2px solid var(--warm);margin-bottom:10px;}
-.wish-item{display:flex;align-items:center;gap:10px;background:white;border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow);}
-.wish-check{width:22px;height:22px;accent-color:#CC0000;cursor:pointer;flex-shrink:0;}
-.wish-item-label{flex:1;min-width:0;}
-.wish-item-name{font-size:14px;line-height:1.4;}
-.wish-item-meta{font-size:11px;color:var(--mid);margin-top:2px;}
-.wish-done .wish-item-name{text-decoration:line-through;opacity:.45;}
-.wish-del-btn{background:none;border:none;color:#CC0000;font-size:13px;padding:4px 6px;cursor:pointer;opacity:.5;flex-shrink:0;}
-/* POKECENTER */
-.pc-header-bar{background:white;border-radius:12px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow);}
-.pc-prog-bar{flex:1;height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;}
-.pc-prog-fill{height:100%;background:#CC0000;border-radius:4px;transition:width .3s;}
-.pc-item{display:flex;align-items:flex-start;gap:10px;background:white;border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow);}
-.pc-check{width:22px;height:22px;accent-color:#CC0000;cursor:pointer;flex-shrink:0;margin-top:2px;}
-.pc-info{flex:1;min-width:0;}
-.pc-name{font-size:14px;font-weight:600;line-height:1.4;}
-.pc-city{font-size:11px;color:var(--mid);margin-top:2px;}
-.pc-note{font-size:11px;color:var(--mid);margin-top:3px;font-style:italic;}
-.pc-done .pc-name{text-decoration:line-through;opacity:.45;}
-.pc-del-btn{background:none;border:none;color:#CC0000;font-size:13px;padding:4px 6px;cursor:pointer;opacity:.5;flex-shrink:0;}
-</style></head><body>';
+    '</style></head><body>';
 
   html+='<h1>✈ '+trip.dest+'</h1><div class="sub">'+trip.startDate.replace(/-/g,'/')+' → '+trip.endDate.replace(/-/g,'/')+' · '+trip.days.length+'天</div>';
 
@@ -2067,11 +2040,7 @@ function renderMapPins(){
       items.forEach(function(item,idx){
         var pi=planItems.filter(function(p){return p.id===item.id;})[0];
         if(!pi||pi.lat==null){pinnedItems.push(null);return;}
-        var icon=L.divIcon({
-          className:'',
-          html:'<div style="background:'+color+';color:white;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.35)">'+(idx+1)+'</div>',
-          iconSize:[26,26],iconAnchor:[13,13]
-        });
+        var icon=L.divIcon({className:'',html:'<div style="background:'+color+';color:white;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.35)">'+(idx+1)+'</div>',iconSize:[26,26],iconAnchor:[13,13]});
         var marker=L.marker([pi.lat,pi.lng],{icon:icon});
         marker.bindPopup('<b>'+day.label+'-'+(idx+1)+'. '+escHtml(item.name)+'</b><br>'+m2t(item.startMin)+(item.endMin?'–'+m2t(item.endMin):'')+'<br><small>'+escHtml(item.cat)+'</small>');
         marker.addTo(mapInstance);mapMarkers.push(marker);
@@ -2107,6 +2076,7 @@ function renderMapPins(){
     bounds.push([pi.lat,pi.lng]);
     pinnedItems.push({item:item,pi:pi});
   });
+  /* transport lines between consecutive pinned items */
   for(var i=0;i<pinnedItems.length-1;i++){
     var from=pinnedItems[i],to=pinnedItems[i+1];
     if(!from||!to)continue;
@@ -2117,6 +2087,7 @@ function renderMapPins(){
     var pts=bezierPts([from.pi.lat,from.pi.lng],[to.pi.lat,to.pi.lng]);
     var line=L.polyline(pts,{color:color,weight:3,dashArray:'7,6',opacity:.8});
     line.addTo(mapInstance);mapMarkers.push(line);
+    /* midpoint label */
     var mid=pts[Math.floor(pts.length/2)];
     var durLabel=tc&&tc.durMin?durTxt(tc.durMin):'';
     var labelMarker=L.marker(mid,{
@@ -2332,8 +2303,7 @@ function renderWish(){
   function renderSection(items,type){
     if(!items.length)return'';
     var done=items.filter(function(i){return i.checked;}).length;
-    var html='<div class="prep-cat-group"><div class="wish-type-header">'+type+
-      ' <span style="font-size:10px;font-weight:400;opacity:.6">'+done+'/'+items.length+'</span></div>';
+    var html='<div class="prep-cat-group"><div class="wish-type-header">'+escHtml(type)+' <span style="font-size:10px;font-weight:400;opacity:.6">'+done+'/'+items.length+'</span></div>';
     items.forEach(function(item){
       html+='<div class="wish-item'+(item.checked?' wish-done':'')+'">'+
         '<input type="checkbox" class="wish-check"'+(item.checked?' checked':'')+' onchange="toggleWishItem('+item.id+',this.checked)">'+
@@ -2385,7 +2355,7 @@ function addWishItem(){
 }
 function deleteWishItem(id){wishItems=wishItems.filter(function(i){return i.id!==id;});saveData();renderWish();}
 
-/* ── POKÉMON CENTER TAB ── */
+/* ── POKECENTER TAB ── */
 function initPokeCenterDefaults(){
   var idC=1;
   pokeCenterItems=POKE_CENTERS_DEFAULT.map(function(c){
@@ -2403,7 +2373,7 @@ function renderPokeCenters(){
     '<span style="font-size:12px;color:var(--mid);white-space:nowrap;margin-left:8px">'+done+' / '+total+'</span>'+
   '</div>';
   if(!pokeCenterItems.length){
-    html+='<div class="empty"><div class="empty-icon">🏪</div><div class="empty-text">新增要去的寶可夢中心吧！</div></div>';
+    html+='<div class="empty"><div class="empty-icon">🏤</div><div class="empty-text">新增要去的寶可夢中心吧！</div></div>';
   }else{
     pokeCenterItems.forEach(function(item){
       html+='<div class="pc-item'+(item.checked?' pc-done':'')+'">'+
@@ -2418,9 +2388,7 @@ function renderPokeCenters(){
     });
   }
   html+='<div style="padding-top:16px;border-top:2px solid var(--warm);margin-top:16px">'+
-    '<div style="display:flex;gap:8px;margin-bottom:8px">'+
-      '<input id="pc-new-name" class="form-input" placeholder="自訂寶可夢中心名稱（必填）" style="flex:1">'+
-    '</div>'+
+    '<input id="pc-new-name" class="form-input" placeholder="自訂寶可夢中心名稱（必填）" style="width:100%;margin-bottom:8px">'+
     '<div style="display:flex;gap:8px">'+
       '<input id="pc-new-city" class="form-input" placeholder="地點（可選）" style="flex:1">'+
       '<button onclick="addPC()" class="btn-add" style="margin:0;padding:10px 14px;white-space:nowrap">＋</button>'+
