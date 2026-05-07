@@ -30,7 +30,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--light);color:var(--d
 .home-sub{color:rgba(255,255,255,.7);font-size:13px;margin-top:8px;}
 .home-bottom{background:white;border-radius:32px 32px 0 0;padding:36px 24px 48px;display:flex;flex-direction:column;align-items:center;gap:14px;transform:translateY(100%);opacity:0;pointer-events:none;transition:transform .45s cubic-bezier(.34,1.56,.64,1),opacity .3s;}
 .home-bottom.visible{transform:translateY(0);opacity:1;pointer-events:auto;}
-.home-version{position:absolute;bottom:16px;right:16px;font-family:'Press Start 2P',monospace;font-size:9px;color:rgba(255,255,255,.35);pointer-events:none;letter-spacing:.05em;}
+.home-version{position:absolute;bottom:16px;right:16px;font-family:'Press Start 2P',monospace;font-size:9px;color:white;text-shadow:0 1px 6px rgba(0,0,0,.6);pointer-events:none;letter-spacing:.05em;}
 .home-divider{width:50px;height:4px;background:#1a1a1a;border-radius:2px;margin-bottom:4px;}
 .btn-home{width:100%;max-width:320px;border:none;border-radius:14px;padding:18px 20px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;display:flex;align-items:center;gap:14px;text-align:left;}
 .btn-home-new{background:#CC0000;color:white;box-shadow:0 4px 0 #990000;}
@@ -279,6 +279,31 @@ select.field-input option{background:#880000;color:white;}
 .prep-done{text-decoration:line-through;opacity:.45;}
 .prep-del-btn{background:none;border:none;color:#CC0000;font-size:13px;padding:4px 6px;cursor:pointer;opacity:.5;flex-shrink:0;}
 .prep-add-row{display:flex;gap:8px;margin-top:16px;padding-top:16px;border-top:2px solid var(--warm);}
+/* LIST SUB-TABS */
+.list-sub-tabs{display:flex;background:white;border-radius:12px;padding:4px;margin-bottom:16px;box-shadow:var(--shadow);gap:4px;}
+.list-sub-btn{flex:1;background:none;border:none;border-radius:9px;padding:10px;font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;transition:all .2s;}
+.list-sub-btn.active{background:#CC0000;color:white;}
+/* WISH LIST */
+.wish-type-header{font-size:11px;font-weight:700;color:var(--mid);letter-spacing:.08em;text-transform:uppercase;padding:10px 0 8px;border-bottom:2px solid var(--warm);margin-bottom:10px;}
+.wish-item{display:flex;align-items:center;gap:10px;background:white;border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow);}
+.wish-check{width:22px;height:22px;accent-color:#CC0000;cursor:pointer;flex-shrink:0;}
+.wish-item-label{flex:1;min-width:0;}
+.wish-item-name{font-size:14px;line-height:1.4;}
+.wish-item-meta{font-size:11px;color:var(--mid);margin-top:2px;}
+.wish-done .wish-item-name{text-decoration:line-through;opacity:.45;}
+.wish-del-btn{background:none;border:none;color:#CC0000;font-size:13px;padding:4px 6px;cursor:pointer;opacity:.5;flex-shrink:0;}
+/* POKECENTER */
+.pc-header-bar{background:white;border-radius:12px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow);}
+.pc-prog-bar{flex:1;height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;}
+.pc-prog-fill{height:100%;background:#CC0000;border-radius:4px;transition:width .3s;}
+.pc-item{display:flex;align-items:flex-start;gap:10px;background:white;border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow);}
+.pc-check{width:22px;height:22px;accent-color:#CC0000;cursor:pointer;flex-shrink:0;margin-top:2px;}
+.pc-info{flex:1;min-width:0;}
+.pc-name{font-size:14px;font-weight:600;line-height:1.4;}
+.pc-city{font-size:11px;color:var(--mid);margin-top:2px;}
+.pc-note{font-size:11px;color:var(--mid);margin-top:3px;font-style:italic;}
+.pc-done .pc-name{text-decoration:line-through;opacity:.45;}
+.pc-del-btn{background:none;border:none;color:#CC0000;font-size:13px;padding:4px 6px;cursor:pointer;opacity:.5;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -320,7 +345,7 @@ select.field-input option{background:#880000;color:white;}
       </div>
     </button>
   </div>
-  <div class="home-version">V1.01</div>
+  <div class="home-version">V1.02</div>
 </div>
 
 <div id="setup-screen">
@@ -398,7 +423,7 @@ select.field-input option{background:#880000;color:white;}
           <option value="⚔️ 景點">⚔️ 景點</option><option value="🍱 餐廳">🍱 餐廳</option>
           <option value="🛒 購物">🛒 購物</option><option value="💤 住宿">💤 住宿</option>
           <option value="✈ 機場">✈ 機場</option>
-          <option value="🎪 體驗">🎪 體驗</option>
+          <option value="🎪 體驗">🎪 體驗</option><option value="🚉 車站">🚉 車站</option>
         </select>
         <input class="form-input" id="plan-note" placeholder="備註（可選）">
       </div>
@@ -452,19 +477,33 @@ select.field-input option{background:#880000;color:white;}
   </div>
 
   <div class="tab-content" id="tab-prep">
-    <div class="prep-progress">
-      <span style="font-size:13px;color:var(--mid);white-space:nowrap;font-weight:600">出發準備</span>
-      <div class="prep-prog-bar"><div class="prep-prog-fill" id="prep-prog-fill" style="width:0%"></div></div>
-      <span id="prep-prog-txt" style="font-size:12px;color:var(--mid);white-space:nowrap">0 / 0</span>
+    <div class="list-sub-tabs">
+      <button class="list-sub-btn active" id="list-sub-prep" onclick="switchListTab('prep')">✅ 出發準備</button>
+      <button class="list-sub-btn" id="list-sub-wish" onclick="switchListTab('wish')">🍜 美食/伴手禮</button>
     </div>
-    <div id="prep-list"></div>
+    <div id="list-section-prep">
+      <div class="prep-progress">
+        <span style="font-size:13px;color:var(--mid);white-space:nowrap;font-weight:600">出發準備</span>
+        <div class="prep-prog-bar"><div class="prep-prog-fill" id="prep-prog-fill" style="width:0%"></div></div>
+        <span id="prep-prog-txt" style="font-size:12px;color:var(--mid);white-space:nowrap">0 / 0</span>
+      </div>
+      <div id="prep-list"></div>
+    </div>
+    <div id="list-section-wish" style="display:none">
+      <div id="wish-list"></div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-pokecenter">
+    <div id="pokecenter-content"></div>
   </div>
 
   <div class="tab-bar">
-    <button class="tab-btn" onclick="switchTab('prep',this)"><span class="tab-icon">✅</span>準備</button>
+    <button class="tab-btn" onclick="switchTab('prep',this)"><span class="tab-icon">📋</span>清單</button>
     <button class="tab-btn active" onclick="switchTab('plan',this)"><span class="tab-icon">📅</span>行程</button>
     <button class="tab-btn" id="tab-map-btn" onclick="switchTab('map',this)"><span class="tab-icon">🗺️</span>地圖</button>
     <button class="tab-btn" onclick="switchTab('expense',this)"><span class="tab-icon">💰</span>記帳</button>
+    <button class="tab-btn" onclick="switchTab('pokecenter',this)"><span class="tab-icon">🔴</span>中心</button>
   </div>
 </div>
 
@@ -554,6 +593,25 @@ var stayH=1,stayM=0;
 var tcDrums={};
 var dayStartTimes={};// {dayIdx: minutes}
 var prepItems=[];
+var wishItems=[];
+var pokeCenterItems=[];
+var activeListTab='prep';
+var POKE_CENTERS_DEFAULT=[
+  {name:'寶可夢中心 MEGA TOKYO',city:'東京・池袋 Sunshine City'},
+  {name:'寶可夢中心 TOKYO',city:'東京・池袋'},
+  {name:'寶可夢中心 天空之樹商場',city:'東京・押上'},
+  {name:'寶可夢中心 橫濱',city:'神奈川・橫濱'},
+  {name:'寶可夢中心 名古屋',city:'愛知・名古屋'},
+  {name:'寶可夢中心 大阪',city:'大阪・梅田'},
+  {name:'寶可夢中心 京都',city:'京都・四條'},
+  {name:'寶可夢中心 神戶',city:'兵庫・神戶'},
+  {name:'寶可夢中心 廣島',city:'廣島'},
+  {name:'寶可夢中心 福岡',city:'福岡・天神'},
+  {name:'寶可夢中心 北海道',city:'北海道・札幌'},
+  {name:'寶可夢中心 東北',city:'宮城・仙台'},
+  {name:'寶可夢中心 金沢',city:'石川・金沢'},
+];
+var DAY_COLORS=['#CC0000','#1976D2','#388E3C','#F57C00','#7B1FA2','#0097A7','#D81B60','#5D4037','#558B2F','#E65100'];
 var PREP_DEFAULTS=[
   {cat:'📋 證件',items:['護照','簽證','身分證影本','機票確認信']},
   {cat:'💳 金融',items:['信用卡','現金','外幣換好','行動支付設定']},
@@ -579,7 +637,7 @@ var EXP_CATS_DEF=[
   {key:'💊',label:'其他',icon:'💊'},
   {key:'🚑',label:'緊急',icon:'🚑'}
 ];
-var CATS=['⚔️ 景點','🍱 餐廳','🛒 購物','💤 住宿','✈ 機場','🎪 體驗'];
+var CATS=['⚔️ 景點','🍱 餐廳','🛒 購物','💤 住宿','✈ 機場','🎪 體驗','🚉 車站'];
 
 function uid(){return _id++;}
 function t2m(t){var p=t.split(':');return+p[0]*60+ +p[1];}
@@ -702,9 +760,9 @@ function archiveCurrentToMemory(){
 }
 function clearTripData(){
   trip={dest:'',startDate:'',endDate:'',currency:'JPY',days:[]};
-  planItems=[];transports=[];flights=[];expenses=[];dayStartTimes={};prepItems=[];
+  planItems=[];transports=[];flights=[];expenses=[];dayStartTimes={};prepItems=[];wishItems=[];pokeCenterItems=[];
   currentDay=0;exchangeRate=null;_id=1;editMode=false;
-  ['tv_trip','tv_plans','tv_tc','tv_flights','tv_exp','tv_id','tv_dst','tv_prep'].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+  ['tv_trip','tv_plans','tv_tc','tv_flights','tv_exp','tv_id','tv_dst','tv_prep','tv_wish','tv_pc'].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
 }
 
 /* ── MEMORIES ── */
@@ -951,7 +1009,7 @@ function startTrip(){
   if(!dest){alert('請輸入目的地');return;}if(!s||!e){alert('請選擇日期');return;}if(s>e){alert('日期有誤');return;}
   var budget=+(document.getElementById('budget-input').value)||0;
   trip={dest:dest,startDate:s,endDate:e,currency:c,days:genDays(s,e),budget:budget};
-  initPrepDefaults();
+  initPrepDefaults();initWishDefaults();initPokeCenterDefaults();
   showApp();renderAll();fetchRate(c);saveData();
 }
 function genDays(s,e){
@@ -1187,7 +1245,18 @@ function renderTimeline(){
           '<button class="btn-save-edit" onclick="saveEdit('+item.id+')" style="margin-top:10px">儲存</button>'+
         '</div>'+
         '<div class="plan-copy-panel'+(openCopyId===item.id?' open':'')+'" id="cp'+item.id+'">'+
-          '<div class="edit-field-label" style="margin-bottom:8px">複製到哪一天？</div>'+
+          '<div class="edit-field-label" style="margin-bottom:8px">插入到當天</div>'+
+          '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">'+
+            (function(){
+              var sdi=planItems.filter(function(p){return p.dayIdx===currentDay;}).sort(function(a,b){return a.order-b.order;});
+              var btns='<button class="day-tab" style="font-size:11px;padding:5px 10px;white-space:nowrap" onclick="insertPlanSameDay('+item.id+',-1)">最前面</button>';
+              sdi.forEach(function(sitem){
+                btns+='<button class="day-tab" style="font-size:11px;padding:5px 10px;white-space:nowrap" onclick="insertPlanSameDay('+item.id+','+sitem.order+')">'+escHtml(sitem.name.slice(0,6))+'後</button>';
+              });
+              return btns;
+            })()+
+          '</div>'+
+          (trip.days.length>1?'<div class="edit-field-label" style="margin-bottom:8px">複製到其他天</div>'+
           '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
             trip.days.map(function(d,di){
               if(di===currentDay)return'';
@@ -1198,7 +1267,7 @@ function renderTimeline(){
                 d.label+'（'+dd+'）'+(dow2?'<br><span style="font-size:9px;opacity:.7">'+dow2+'</span>':'')+
               '</button>';
             }).join('')+
-          '</div>'+
+          '</div>':'')+ 
         '</div>'
       :'')+
     '</div>';
@@ -1323,6 +1392,15 @@ function delPlan(id){
 }
 function setDayStartTime(val){dayStartTimes[currentDay]=t2m(val);saveData();renderTimeline();}
 function toggleCopyPanel(id){openCopyId=openCopyId===id?null:id;openEditId=null;renderTimeline();}
+function insertPlanSameDay(itemId,insertAfterOrder){
+  var orig=planItems.filter(function(p){return p.id===itemId;})[0];if(!orig)return;
+  var insertOrder=insertAfterOrder+1;
+  planItems.filter(function(p){return p.dayIdx===currentDay&&p.order>=insertOrder;}).forEach(function(p){p.order++;});
+  var newItem={id:uid(),dayIdx:currentDay,time:orig.time,order:insertOrder,name:orig.name,cat:orig.cat,note:orig.note||'',stay:orig.stay||0};
+  if(orig.lat!=null){newItem.lat=orig.lat;newItem.lng=orig.lng;}
+  planItems.push(newItem);
+  openCopyId=null;renderTimeline();saveData();
+}
 function copyPlanToDay(itemId,targetDay){
   var item=planItems.filter(function(p){return p.id===itemId;})[0];if(!item)return;
   var maxOrder=planItems.filter(function(p){return p.dayIdx===targetDay;}).reduce(function(m,p){return Math.max(m,p.order);}, -1);
@@ -1577,7 +1655,32 @@ function exportPDF(){
       'td{padding:8px 10px;font-size:13px;border-bottom:1px solid #E8D5B0;}'+
       'tr.total td{font-weight:700;background:#FAF6EE;}'+
       '@media print{body{padding:16px;}}'+
-    '</style></head><body>';
+    '/* LIST SUB-TABS */
+.list-sub-tabs{display:flex;background:white;border-radius:12px;padding:4px;margin-bottom:16px;box-shadow:var(--shadow);gap:4px;}
+.list-sub-btn{flex:1;background:none;border:none;border-radius:9px;padding:10px;font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;transition:all .2s;}
+.list-sub-btn.active{background:#CC0000;color:white;}
+/* WISH LIST */
+.wish-type-header{font-size:11px;font-weight:700;color:var(--mid);letter-spacing:.08em;text-transform:uppercase;padding:10px 0 8px;border-bottom:2px solid var(--warm);margin-bottom:10px;}
+.wish-item{display:flex;align-items:center;gap:10px;background:white;border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow);}
+.wish-check{width:22px;height:22px;accent-color:#CC0000;cursor:pointer;flex-shrink:0;}
+.wish-item-label{flex:1;min-width:0;}
+.wish-item-name{font-size:14px;line-height:1.4;}
+.wish-item-meta{font-size:11px;color:var(--mid);margin-top:2px;}
+.wish-done .wish-item-name{text-decoration:line-through;opacity:.45;}
+.wish-del-btn{background:none;border:none;color:#CC0000;font-size:13px;padding:4px 6px;cursor:pointer;opacity:.5;flex-shrink:0;}
+/* POKECENTER */
+.pc-header-bar{background:white;border-radius:12px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow);}
+.pc-prog-bar{flex:1;height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;}
+.pc-prog-fill{height:100%;background:#CC0000;border-radius:4px;transition:width .3s;}
+.pc-item{display:flex;align-items:flex-start;gap:10px;background:white;border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow);}
+.pc-check{width:22px;height:22px;accent-color:#CC0000;cursor:pointer;flex-shrink:0;margin-top:2px;}
+.pc-info{flex:1;min-width:0;}
+.pc-name{font-size:14px;font-weight:600;line-height:1.4;}
+.pc-city{font-size:11px;color:var(--mid);margin-top:2px;}
+.pc-note{font-size:11px;color:var(--mid);margin-top:3px;font-style:italic;}
+.pc-done .pc-name{text-decoration:line-through;opacity:.45;}
+.pc-del-btn{background:none;border:none;color:#CC0000;font-size:13px;padding:4px 6px;cursor:pointer;opacity:.5;flex-shrink:0;}
+</style></head><body>';
 
   html+='<h1>✈ '+trip.dest+'</h1><div class="sub">'+trip.startDate.replace(/-/g,'/')+' → '+trip.endDate.replace(/-/g,'/')+' · '+trip.days.length+'天</div>';
 
@@ -1729,7 +1832,8 @@ function switchTab(tab,btn){
   var fab=document.getElementById('exp-fab');
   if(fab){if(tab==='expense'&&editMode)fab.classList.add('show');else fab.classList.remove('show');}
   if(tab==='expense'){expViewDay=currentDay;expCatFilter=null;renderExpenses();}
-  if(tab==='prep'){renderPrep();}
+  if(tab==='prep'){if(activeListTab==='prep')renderPrep();else renderWish();}
+  if(tab==='pokecenter'){renderPokeCenters();}
   if(tab==='map'){
     mapViewDay=currentDay;
     renderMapDayTabs();
@@ -1748,6 +1852,8 @@ function saveData(){
     localStorage.setItem('tv_id',''+_id);
     localStorage.setItem('tv_dst',JSON.stringify(dayStartTimes));
     localStorage.setItem('tv_prep',JSON.stringify(prepItems));
+    localStorage.setItem('tv_wish',JSON.stringify(wishItems));
+    localStorage.setItem('tv_pc',JSON.stringify(pokeCenterItems));
   }catch(e){}
 }
 function loadData(){
@@ -1761,16 +1867,19 @@ function loadData(){
     _id=+(localStorage.getItem('tv_id')||'1');
     dayStartTimes=JSON.parse(localStorage.getItem('tv_dst')||'{}');
     prepItems=JSON.parse(localStorage.getItem('tv_prep')||'[]');
+    wishItems=JSON.parse(localStorage.getItem('tv_wish')||'[]');
+    pokeCenterItems=JSON.parse(localStorage.getItem('tv_pc')||'[]');
     if(!prepItems.length)initPrepDefaults();
+    if(!pokeCenterItems.length)initPokeCenterDefaults();
     return true;
   }catch(e){return false;}
 }
 function resetTrip(){
   if(!confirm('確定清除所有資料？'))return;
-  planItems=[];transports=[];flights=[];expenses=[];dayStartTimes={};prepItems=[];
+  planItems=[];transports=[];flights=[];expenses=[];dayStartTimes={};prepItems=[];wishItems=[];pokeCenterItems=[];
   currentDay=0;exchangeRate=null;_id=1;editMode=false;
   trip={dest:'',startDate:'',endDate:'',currency:'JPY',days:[]};
-  ['tv_trip','tv_plans','tv_tc','tv_flights','tv_exp','tv_id','tv_dst','tv_prep'].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+  ['tv_trip','tv_plans','tv_tc','tv_flights','tv_exp','tv_id','tv_dst','tv_prep','tv_wish','tv_pc'].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
   showHome();
 }
 
@@ -1926,9 +2035,10 @@ function initMap(){
 function renderMapDayTabs(){
   var el=document.getElementById('map-day-tabs');
   if(!el||!trip.days)return;
-  el.innerHTML=trip.days.map(function(d,i){
-    return'<button class="map-day-btn'+(i===mapViewDay?' active':'')+'" onclick="selectMapDay('+i+')">'+d.label+'</button>';
-  }).join('');
+  el.innerHTML='<button class="map-day-btn'+(mapViewDay===-1?' active':'')+'" onclick="selectMapDay(-1)">全程</button>'+
+    trip.days.map(function(d,i){
+      return'<button class="map-day-btn'+(i===mapViewDay?' active':'')+'" onclick="selectMapDay('+i+')">'+d.label+'</button>';
+    }).join('');
 }
 function selectMapDay(i){
   mapViewDay=i;renderMapDayTabs();renderMapPins();
@@ -1948,6 +2058,38 @@ function bezierPts(a,b){
 function renderMapPins(){
   if(!mapInstance)return;
   mapMarkers.forEach(function(m){m.remove();});mapMarkers=[];
+  if(mapViewDay===-1){
+    var allBounds=[];
+    trip.days.forEach(function(day,di){
+      var color=DAY_COLORS[di%DAY_COLORS.length];
+      var items=computeTimes(di);
+      var pinnedItems=[];
+      items.forEach(function(item,idx){
+        var pi=planItems.filter(function(p){return p.id===item.id;})[0];
+        if(!pi||pi.lat==null){pinnedItems.push(null);return;}
+        var icon=L.divIcon({
+          className:'',
+          html:'<div style="background:'+color+';color:white;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.35)">'+(idx+1)+'</div>',
+          iconSize:[26,26],iconAnchor:[13,13]
+        });
+        var marker=L.marker([pi.lat,pi.lng],{icon:icon});
+        marker.bindPopup('<b>'+day.label+'-'+(idx+1)+'. '+escHtml(item.name)+'</b><br>'+m2t(item.startMin)+(item.endMin?'–'+m2t(item.endMin):'')+'<br><small>'+escHtml(item.cat)+'</small>');
+        marker.addTo(mapInstance);mapMarkers.push(marker);
+        allBounds.push([pi.lat,pi.lng]);
+        pinnedItems.push({item:item,pi:pi});
+      });
+      for(var i=0;i<pinnedItems.length-1;i++){
+        var from=pinnedItems[i],to=pinnedItems[i+1];
+        if(!from||!to)continue;
+        var pts=bezierPts([from.pi.lat,from.pi.lng],[to.pi.lat,to.pi.lng]);
+        var line=L.polyline(pts,{color:color,weight:3,dashArray:'7,6',opacity:.8});
+        line.addTo(mapInstance);mapMarkers.push(line);
+      }
+    });
+    if(allBounds.length===1)mapInstance.setView(allBounds[0],15);
+    else if(allBounds.length>1)mapInstance.fitBounds(allBounds,{padding:[40,40]});
+    return;
+  }
   var items=computeTimes(mapViewDay);
   var pinnedItems=[];
   var bounds=[];
@@ -1965,7 +2107,6 @@ function renderMapPins(){
     bounds.push([pi.lat,pi.lng]);
     pinnedItems.push({item:item,pi:pi});
   });
-  /* transport lines between consecutive pinned items */
   for(var i=0;i<pinnedItems.length-1;i++){
     var from=pinnedItems[i],to=pinnedItems[i+1];
     if(!from||!to)continue;
@@ -1976,7 +2117,6 @@ function renderMapPins(){
     var pts=bezierPts([from.pi.lat,from.pi.lng],[to.pi.lat,to.pi.lng]);
     var line=L.polyline(pts,{color:color,weight:3,dashArray:'7,6',opacity:.8});
     line.addTo(mapInstance);mapMarkers.push(line);
-    /* midpoint label */
     var mid=pts[Math.floor(pts.length/2)];
     var durLabel=tc&&tc.durMin?durTxt(tc.durMin):'';
     var labelMarker=L.marker(mid,{
@@ -2174,6 +2314,137 @@ function doImportExcel(input){
   reader.readAsArrayBuffer(file);
 }
 
+
+/* ── LIST SUB-TABS ── */
+function switchListTab(tab){
+  activeListTab=tab;
+  document.getElementById('list-section-prep').style.display=tab==='prep'?'block':'none';
+  document.getElementById('list-section-wish').style.display=tab==='wish'?'block':'none';
+  document.getElementById('list-sub-prep').classList.toggle('active',tab==='prep');
+  document.getElementById('list-sub-wish').classList.toggle('active',tab==='wish');
+  if(tab==='prep')renderPrep();else renderWish();
+}
+function initWishDefaults(){wishItems=[];}
+function renderWish(){
+  var el=document.getElementById('wish-list');if(!el)return;
+  var foods=wishItems.filter(function(i){return i.type==='🍜 美食';});
+  var souvenirs=wishItems.filter(function(i){return i.type==='🎁 伴手禮';});
+  function renderSection(items,type){
+    if(!items.length)return'';
+    var done=items.filter(function(i){return i.checked;}).length;
+    var html='<div class="prep-cat-group"><div class="wish-type-header">'+type+
+      ' <span style="font-size:10px;font-weight:400;opacity:.6">'+done+'/'+items.length+'</span></div>';
+    items.forEach(function(item){
+      html+='<div class="wish-item'+(item.checked?' wish-done':'')+'">'+
+        '<input type="checkbox" class="wish-check"'+(item.checked?' checked':'')+' onchange="toggleWishItem('+item.id+',this.checked)">'+
+        '<div class="wish-item-label">'+
+          '<div class="wish-item-name">'+escHtml(item.name)+'</div>'+
+          ((item.location||item.budget)?'<div class="wish-item-meta">'+
+            (item.location?'📍 '+escHtml(item.location):'')+(item.location&&item.budget?' · ':'')+
+            (item.budget?'≈ '+item.budget.toLocaleString():'')+
+          '</div>':'')+
+        '</div>'+
+        '<button class="wish-del-btn" onclick="deleteWishItem('+item.id+')">✕</button>'+
+      '</div>';
+    });
+    return html+'</div>';
+  }
+  var html=renderSection(foods,'🍜 美食')+renderSection(souvenirs,'🎁 伴手禮');
+  if(!wishItems.length)html='<div class="empty" style="padding:40px 20px"><div class="empty-icon">📝</div><div class="empty-text">新增想吃的美食或想買的伴手禮吧！</div></div>';
+  html+='<div style="padding-top:16px;border-top:2px solid var(--warm);margin-top:16px">'+
+    '<div style="display:flex;gap:8px;margin-bottom:8px">'+
+      '<select id="wish-new-type" class="form-input" style="flex:0 0 auto;width:130px;font-size:12px">'+
+        '<option value="🍜 美食">🍜 美食</option>'+
+        '<option value="🎁 伴手禮">🎁 伴手禮</option>'+
+      '</select>'+
+      '<input id="wish-new-name" class="form-input" placeholder="名稱（必填）" style="flex:1">'+
+    '</div>'+
+    '<div style="display:flex;gap:8px;margin-bottom:8px">'+
+      '<input id="wish-new-location" class="form-input" placeholder="地點（可選）" style="flex:1">'+
+      '<input id="wish-new-budget" class="form-input" type="number" inputmode="decimal" placeholder="預算（可選）" style="flex:0 0 100px">'+
+    '</div>'+
+    '<button onclick="addWishItem()" class="btn-add" style="margin:0">＋ 新增</button>'+
+  '</div>';
+  el.innerHTML=html;
+}
+function toggleWishItem(id,checked){
+  var item=wishItems.filter(function(i){return i.id===id;})[0];
+  if(item){item.checked=checked;saveData();renderWish();}
+}
+function addWishItem(){
+  var typeEl=document.getElementById('wish-new-type');
+  var nameEl=document.getElementById('wish-new-name');
+  var locEl=document.getElementById('wish-new-location');
+  var budEl=document.getElementById('wish-new-budget');
+  if(!nameEl||!nameEl.value.trim())return;
+  var maxId=wishItems.reduce(function(m,i){return Math.max(m,i.id);},0);
+  wishItems.push({id:maxId+1,type:typeEl?typeEl.value:'🍜 美食',name:nameEl.value.trim(),
+    location:locEl?locEl.value.trim():'',budget:budEl&&+budEl.value>0?+budEl.value:0,checked:false});
+  nameEl.value='';if(locEl)locEl.value='';if(budEl)budEl.value='';
+  saveData();renderWish();
+}
+function deleteWishItem(id){wishItems=wishItems.filter(function(i){return i.id!==id;});saveData();renderWish();}
+
+/* ── POKÉMON CENTER TAB ── */
+function initPokeCenterDefaults(){
+  var idC=1;
+  pokeCenterItems=POKE_CENTERS_DEFAULT.map(function(c){
+    return{id:idC++,name:c.name,city:c.city,checked:false,note:'',custom:false};
+  });
+}
+function renderPokeCenters(){
+  var el=document.getElementById('pokecenter-content');if(!el)return;
+  var total=pokeCenterItems.length,done=pokeCenterItems.filter(function(i){return i.checked;}).length;
+  var pct=total?Math.round(done/total*100):0;
+  var html='<div class="pc-header-bar">'+
+    '<span style="font-size:18px">🔴</span>'+
+    '<span style="font-size:13px;color:var(--mid);flex:1;font-weight:600">寶可夢中心確核表</span>'+
+    '<div class="pc-prog-bar"><div class="pc-prog-fill" style="width:'+pct+'%"></div></div>'+
+    '<span style="font-size:12px;color:var(--mid);white-space:nowrap;margin-left:8px">'+done+' / '+total+'</span>'+
+  '</div>';
+  if(!pokeCenterItems.length){
+    html+='<div class="empty"><div class="empty-icon">🏪</div><div class="empty-text">新增要去的寶可夢中心吧！</div></div>';
+  }else{
+    pokeCenterItems.forEach(function(item){
+      html+='<div class="pc-item'+(item.checked?' pc-done':'')+'">'+
+        '<input type="checkbox" class="pc-check"'+(item.checked?' checked':'')+' onchange="togglePC('+item.id+',this.checked)">'+
+        '<div class="pc-info">'+
+          '<div class="pc-name">'+escHtml(item.name)+'</div>'+
+          (item.city?'<div class="pc-city">📍 '+escHtml(item.city)+'</div>':'')+
+          (item.note?'<div class="pc-note">📝 '+escHtml(item.note)+'</div>':'')+
+        '</div>'+
+        (item.custom?'<button class="pc-del-btn" onclick="deletePC('+item.id+')">✕</button>':'')+
+      '</div>';
+    });
+  }
+  html+='<div style="padding-top:16px;border-top:2px solid var(--warm);margin-top:16px">'+
+    '<div style="display:flex;gap:8px;margin-bottom:8px">'+
+      '<input id="pc-new-name" class="form-input" placeholder="自訂寶可夢中心名稱（必填）" style="flex:1">'+
+    '</div>'+
+    '<div style="display:flex;gap:8px">'+
+      '<input id="pc-new-city" class="form-input" placeholder="地點（可選）" style="flex:1">'+
+      '<button onclick="addPC()" class="btn-add" style="margin:0;padding:10px 14px;white-space:nowrap">＋</button>'+
+    '</div>'+
+  '</div>';
+  el.innerHTML=html;
+}
+function togglePC(id,checked){
+  var item=pokeCenterItems.filter(function(i){return i.id===id;})[0];
+  if(item){item.checked=checked;saveData();renderPokeCenters();}
+}
+function addPC(){
+  var nameEl=document.getElementById('pc-new-name');
+  var cityEl=document.getElementById('pc-new-city');
+  if(!nameEl||!nameEl.value.trim())return;
+  var maxId=pokeCenterItems.reduce(function(m,i){return Math.max(m,i.id);},0);
+  pokeCenterItems.push({id:maxId+1,name:nameEl.value.trim(),city:cityEl?cityEl.value.trim():'',checked:false,note:'',custom:true});
+  nameEl.value='';if(cityEl)cityEl.value='';
+  saveData();renderPokeCenters();
+}
+function deletePC(id){
+  pokeCenterItems=pokeCenterItems.filter(function(i){return i.id!==id;});
+  saveData();renderPokeCenters();
+}
 /* ── PREP TAB ── */
 function initPrepDefaults(){
   var idC=1;
