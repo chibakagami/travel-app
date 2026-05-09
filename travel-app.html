@@ -1861,7 +1861,22 @@ function loadData(){
     wishItems=JSON.parse(localStorage.getItem('tv_wish')||'[]');
     pokeCenterItems=JSON.parse(localStorage.getItem('tv_pc')||'[]');
     if(!prepItems.length)initPrepDefaults();
-    if(!pokeCenterItems.length)initPokeCenterDefaults();
+    if(!pokeCenterItems.length){
+      initPokeCenterDefaults();
+    }else{
+      var _pcDefaults=pokeCenterItems.filter(function(i){return !i.custom;});
+      var _needsReset=_pcDefaults.length!==POKE_CENTERS_DEFAULT.length||_pcDefaults.some(function(i){return !i.region;});
+      if(_needsReset){
+        var _custom=pokeCenterItems.filter(function(i){return i.custom;});
+        var _idC=1;
+        pokeCenterItems=POKE_CENTERS_DEFAULT.map(function(c){
+          return{id:_idC++,name:c.name,city:c.city,region:c.region||'',checked:false,note:'',custom:false};
+        });
+        var _maxId=pokeCenterItems.length;
+        _custom.forEach(function(i){i.id=++_maxId;pokeCenterItems.push(i);});
+        saveData();
+      }
+    }
     return true;
   }catch(e){return false;}
 }
