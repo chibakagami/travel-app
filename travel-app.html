@@ -56,6 +56,9 @@ select.field-input option{background:#880000;color:white;}
 .btn-start{width:100%;background:#FFD700;color:#1a1a1a;border:none;border-radius:14px;padding:16px;font-family:'Noto Sans TC',sans-serif;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;box-shadow:0 4px 0 #CC9900;}
 /* APP */
 #app{display:none;flex-direction:column;min-height:100vh;}
+#app.expense-mode{height:100dvh;overflow:hidden;}
+#app.expense-mode #tab-expense{display:flex !important;flex-direction:column;flex:1;overflow:hidden;min-height:0;}
+#app.expense-mode .expense-list{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;padding-bottom:16px;}
 .app-header{background:#CC0000;padding:14px 16px 10px;position:sticky;top:0;z-index:100;border-bottom:3px solid #990000;}
 .header-top{display:flex;justify-content:space-between;align-items:flex-start;}
 .trip-name{font-family:'Press Start 2P',monospace;font-size:11px;color:white;line-height:1.7;text-shadow:1px 1px 0 rgba(0,0,0,.3);}
@@ -273,7 +276,8 @@ select.field-input option{background:#880000;color:white;}
 .prep-prog-fill{height:100%;background:#CC0000;border-radius:4px;transition:width .3s;}
 .prep-cat-group{margin-bottom:20px;}
 .prep-cat-title{font-size:11px;font-weight:700;color:var(--mid);letter-spacing:.08em;text-transform:uppercase;padding:10px 0 8px;border-bottom:2px solid var(--warm);margin-bottom:10px;}
-.prep-item{display:flex;align-items:center;gap:10px;background:white;border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow);}
+.prep-items-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;}
+.prep-item{display:flex;align-items:center;gap:8px;background:white;border-radius:10px;padding:9px 10px;box-shadow:var(--shadow);}
 .prep-check{width:22px;height:22px;accent-color:#CC0000;cursor:pointer;flex-shrink:0;}
 .prep-item-label{flex:1;font-size:14px;cursor:pointer;line-height:1.4;}
 .prep-done{text-decoration:line-through;opacity:.45;}
@@ -304,6 +308,8 @@ select.field-input option{background:#880000;color:white;}
 .pc-note{font-size:11px;color:var(--mid);margin-top:3px;font-style:italic;}
 .pc-done .pc-name{text-decoration:line-through;opacity:.45;}
 .pc-del-btn{background:none;border:none;color:#CC0000;font-size:13px;padding:4px 6px;cursor:pointer;opacity:.5;flex-shrink:0;}
+.pc-visit-date{font-size:11px;color:var(--mid);margin-top:4px;}
+.pc-visit-date input[type=date]{border:1px solid #FFE082;border-radius:6px;padding:3px 6px;font-size:11px;background:var(--light);color:var(--deep);font-family:var(--sans,sans-serif);}
 .pc-region-header{font-size:11px;font-weight:700;color:#CC0000;letter-spacing:.08em;padding:12px 4px 6px;margin-top:4px;border-top:1px solid var(--warm);}
 .pc-region-header:first-child{border-top:none;margin-top:0;padding-top:4px;}
 </style>
@@ -347,7 +353,7 @@ select.field-input option{background:#880000;color:white;}
       </div>
     </button>
   </div>
-  <div class="home-version">V1.03</div>
+  <div class="home-version">V1.04</div>
 </div>
 
 <div id="setup-screen">
@@ -773,7 +779,7 @@ function archiveCurrentToMemory(){
     trip:JSON.parse(JSON.stringify(trip)),planItems:JSON.parse(JSON.stringify(planItems)),
     transports:JSON.parse(JSON.stringify(transports)),flights:JSON.parse(JSON.stringify(flights)),
     expenses:JSON.parse(JSON.stringify(expenses)),dayStartTimes:JSON.parse(JSON.stringify(dayStartTimes)),
-    exchangeRate:exchangeRate});
+    exchangeRate:exchangeRate,pokeCenterVisits:JSON.parse(JSON.stringify(pokeCenterItems.filter(function(i){return i.checked;})))});
   saveMemories();
 }
 function clearTripData(){
@@ -791,7 +797,7 @@ function archiveMemory(){
     trip:JSON.parse(JSON.stringify(trip)),planItems:JSON.parse(JSON.stringify(planItems)),
     transports:JSON.parse(JSON.stringify(transports)),flights:JSON.parse(JSON.stringify(flights)),
     expenses:JSON.parse(JSON.stringify(expenses)),dayStartTimes:JSON.parse(JSON.stringify(dayStartTimes)),
-    exchangeRate:exchangeRate});
+    exchangeRate:exchangeRate,pokeCenterVisits:JSON.parse(JSON.stringify(pokeCenterItems.filter(function(i){return i.checked;})))});
   saveMemories();alert('✅ 已保留為美好回憶！');
 }
 function renderMemories(){
@@ -1011,7 +1017,23 @@ function renderMemViewBody(mem){
         '<div style="border-top:1px solid rgba(255,255,255,.1);padding-top:8px">'+catRows+'</div>'+
       '</div>';
   }
-  body.innerHTML=dayTabsHtml+summaryBarHtml+flHtml+tlHtml+expHtml;
+  var pcVisits=mem.pokeCenterVisits&&mem.pokeCenterVisits.length?mem.pokeCenterVisits:[];
+  var pcHtml='';
+  if(pcVisits.length){
+    pcHtml='<div style="background:#1a1a1a;border-radius:12px;padding:14px 16px;margin-top:12px;border:1px solid rgba(204,0,0,.25)">'+
+      '<div style="font-size:12px;font-weight:700;color:#CC0000;margin-bottom:10px;letter-spacing:.06em">🔴 拜訪的寶可夢中心</div>'+
+      pcVisits.map(function(i){
+        return'<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)">'+
+          '<span style="color:#CC0000;font-size:12px">✓</span>'+
+          '<div style="flex:1"><div style="font-size:13px;font-weight:600;color:#e0e0e0">'+escHtml(i.name)+'</div>'+
+          (i.city?'<div style="font-size:11px;color:#888">'+escHtml(i.city)+'</div>':'')+
+          '</div>'+
+          (i.visitDate?'<span style="font-size:11px;color:#aaa">'+i.visitDate+'</span>':'')+
+        '</div>';
+      }).join('')+
+    '</div>';
+  }
+  body.innerHTML=dayTabsHtml+summaryBarHtml+flHtml+tlHtml+expHtml+pcHtml;
 }
 function delMemory(id){
   if(!confirm('確定刪除這個回憶？'))return;
@@ -1297,16 +1319,30 @@ function renderTimeline(){
       var tcMode=tc?tc.mode:'walk',tcMin=tc?tc.durMin:0;
       var mode=MODES[0];for(var k=0;k<MODES.length;k++){if(MODES[k].key===tcMode){mode=MODES[k];break;}}
       var tcKey='tc'+item.id,isOpen=openTcId===tcKey;
-      html+='<div class="tc-wrap">'+
-        '<div class="tc-spine"><div class="tc-vline"></div><div class="tc-circle"></div><div class="tc-vline"></div></div>'+
-        '<div class="tc-card">'+
-          '<div class="tc-summary'+(editMode?' clickable':'')+'"'+(editMode?' onclick="toggleTc(\''+tcKey+'\')"':'')+'>'+
-            '<span class="tc-icon-big">'+mode.icon+'</span>'+
-            '<div class="tc-info"><div class="tc-mode-label">'+(['ship','metro','train','bike'].indexOf(tcMode)>=0&&tc&&tc.customLabel?tc.customLabel:mode.label)+'</div>'+
-            '<div class="tc-dur-label">'+(tcMin?durTxt(tcMin):(editMode?'點此設定交通時間':'—'))+'</div></div>'+
-            (editMode?'<span class="tc-chevron'+(isOpen?' open':'')+'">▼</span>':'')+
+      var tcLabel=(['ship','metro','train','bike'].indexOf(tcMode)>=0&&tc&&tc.customLabel?tc.customLabel:mode.label);
+      var tcNote=tc&&tc.note?tc.note:'';
+      if(!editMode){
+        html+='<div style="display:flex;align-items:flex-start;gap:8px;padding:4px 0 4px 8px;min-height:28px">'+
+          '<div style="display:flex;flex-direction:column;align-items:center;padding-top:3px;flex-shrink:0">'+
+            '<div style="width:2px;background:#FFE082;height:12px"></div>'+
+            '<div style="width:2px;background:#FFE082;height:12px"></div>'+
           '</div>'+
-          (editMode?
+          '<div style="display:flex;align-items:center;gap:6px;flex:1;flex-wrap:wrap">'+
+            '<span style="font-size:15px;line-height:1">'+mode.icon+'</span>'+
+            '<span style="font-size:12px;color:var(--mid)">'+escHtml(tcLabel)+(tcMin?' · '+durTxt(tcMin):'')+'</span>'+
+            (tcNote?'<span style="font-size:11px;color:#aaa;font-style:italic">'+escHtml(tcNote)+'</span>':'')+
+          '</div>'+
+        '</div>';
+      }else{
+        html+='<div class="tc-wrap">'+
+          '<div class="tc-spine"><div class="tc-vline"></div><div class="tc-circle"></div><div class="tc-vline"></div></div>'+
+          '<div class="tc-card">'+
+            '<div class="tc-summary clickable" onclick="toggleTc(\''+tcKey+'\')">'+
+              '<span class="tc-icon-big">'+mode.icon+'</span>'+
+              '<div class="tc-info"><div class="tc-mode-label">'+escHtml(tcLabel)+'</div>'+
+              '<div class="tc-dur-label">'+(tcMin?durTxt(tcMin):'點此設定交通時間')+'</div></div>'+
+              '<span class="tc-chevron'+(isOpen?' open':'')+'">▼</span>'+
+            '</div>'+
             '<div class="tc-panel'+(isOpen?' open':'')+'" id="pnl'+tcKey+'">'+
               '<div class="tc-panel-title">選擇交通方式</div>'+
               '<div class="tc-mode-grid">'+MODES.map(function(m){return'<div class="tc-mode-btn'+(tcMode===m.key?' sel':'')+'" onclick="setMode('+item.id+',\''+m.key+'\')"><span class="tm-icon">'+m.icon+'</span><span class="tm-label">'+m.label+'</span></div>';}).join('')+'</div>'+
@@ -1314,12 +1350,14 @@ function renderTimeline(){
                 '<div class="edit-field-label" style="margin-bottom:4px">'+(tcMode==='ship'?'交通方式名稱':'車次')+'</div>'+
                 '<input class="edit-input" id="ctn'+item.id+'" placeholder="'+(tcMode==='ship'?'例：纜車、渡輪...':'例：山手線、希望 500 號...')+'" value="'+(tc&&tc.customLabel?tc.customLabel:'')+'">'+
               '</div>'+
+              '<div class="edit-field-label" style="margin-bottom:4px">備註</div>'+
+              '<input class="edit-input" id="tcnote'+item.id+'" placeholder="補充說明、注意事項..." value="'+escHtml(tcNote)+'" style="margin-bottom:10px">'+
               '<div class="edit-field-label" style="margin-bottom:6px">交通時間</div>'+
               '<div id="tcdrum'+item.id+'"></div>'+
               '<button class="tc-done-btn" onclick="saveTc('+item.id+')">確定</button>'+
-            '</div>'
-          :'')+
-        '</div></div>';
+            '</div>'+
+          '</div></div>';
+      }
     }
   });
   wrap.innerHTML=html;
@@ -1374,6 +1412,8 @@ function saveTc(itemId){
   else tc.durMin=durMin;
   var ctn=document.getElementById('ctn'+itemId);
   if(ctn&&ctn.value.trim())tc.customLabel=ctn.value.trim();else delete tc.customLabel;
+  var tcnote=document.getElementById('tcnote'+itemId);
+  if(tcnote&&tcnote.value.trim())tc.note=tcnote.value.trim();else delete tc.note;
   openTcId=null;renderTimeline();saveData();
 }
 function addPlanItem(){
@@ -1739,6 +1779,37 @@ function toggleExpSummary(){
   if(chevron)chevron.style.transform=expSummaryOpen?'rotate(180deg)':'rotate(0deg)';
   if(expSummaryOpen)renderExpSummary();
 }
+var CHART_COLORS={'🍜':'#FF9800','🚌':'#2196F3','🏨':'#9C27B0','🎫':'#4CAF50','🛍':'#E91E63','🧋':'#FFEB3B','💊':'#607D8B','🚑':'#F44336'};
+var PIE_FALLBACK=['#FF9800','#2196F3','#9C27B0','#4CAF50','#E91E63','#FFEB3B','#607D8B','#F44336'];
+function buildPieSVG(catMap,total){
+  if(!total)return'';
+  var cats=Object.keys(catMap).sort(function(a,b){return catMap[b]-catMap[a];});
+  var size=120,cx=60,cy=60,r=52;
+  var paths='';var startAngle=-Math.PI/2;
+  cats.forEach(function(c,i){
+    var pct=catMap[c]/total;if(!pct)return;
+    var endAngle=startAngle+pct*2*Math.PI;
+    var x1=cx+r*Math.cos(startAngle),y1=cy+r*Math.sin(startAngle);
+    var x2=cx+r*Math.cos(endAngle),y2=cy+r*Math.sin(endAngle);
+    var largeArc=pct>0.5?1:0;
+    var color=CHART_COLORS[c]||PIE_FALLBACK[i%PIE_FALLBACK.length];
+    paths+='<path d="M'+cx+' '+cy+' L'+x1.toFixed(1)+' '+y1.toFixed(1)+' A'+r+' '+r+' 0 '+largeArc+' 1 '+x2.toFixed(1)+' '+y2.toFixed(1)+' Z" fill="'+color+'"/>';
+    startAngle=endAngle;
+  });
+  var legend=cats.map(function(c,i){
+    var color=CHART_COLORS[c]||PIE_FALLBACK[i%PIE_FALLBACK.length];
+    var pct2=Math.round(catMap[c]/total*100);
+    var def=null;for(var k=0;k<EXP_CATS_DEF.length;k++){if(EXP_CATS_DEF[k].key===c){def=EXP_CATS_DEF[k];break;}}
+    return'<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">'+
+      '<div style="width:9px;height:9px;border-radius:2px;background:'+color+';flex-shrink:0"></div>'+
+      '<span style="font-size:11px;color:#ccc">'+c+(def?' '+def.label:'')+' '+pct2+'%</span>'+
+    '</div>';
+  }).join('');
+  return'<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.1)">'+
+    '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'">'+paths+'</svg>'+
+    '<div style="flex:1;overflow:hidden">'+legend+'</div>'+
+  '</div>';
+}
 function renderExpSummary(){
   var panel=document.getElementById('exp-summary-panel');if(!panel)return;
   if(!expenses.length){panel.innerHTML='<div style="color:#888;font-size:13px;text-align:center;padding:8px">尚無記帳資料</div>';return;}
@@ -1790,6 +1861,10 @@ function renderExpSummary(){
         '</div>'+
       '</div>';
   }
+  budgetHtml+='<div style="text-align:right;margin-bottom:8px;margin-top:'+(trip.budget?'4px':'-4px')+'">'+
+    '<button onclick="editBudget()" style="background:rgba(255,215,0,.12);border:1px solid rgba(255,215,0,.25);color:#FFD700;border-radius:8px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:var(--sans,sans-serif)">'+
+    '💰 '+(trip.budget?'修改預算':'設定旅行預算')+
+    '</button></div>';
   panel.innerHTML=
     budgetHtml+
     '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">'+
@@ -1799,7 +1874,7 @@ function renderExpSummary(){
         (grandTwd?'<div style="font-size:11px;color:#888;margin-top:1px">≈ NT$ '+grandTwd.toLocaleString()+'</div>':'')+
       '</div></div>'+
     '<div style="margin-bottom:8px">'+dayRows+'</div>'+
-    '<div style="border-top:1px solid rgba(255,255,255,.1);padding-top:8px">'+catRows+'</div>';
+    '<div style="border-top:1px solid rgba(255,255,255,.1);padding-top:10px">'+buildPieSVG(catMap,grandTotal)+catRows+'</div>';
 }
 function updateSummaryBar(){
   var bar=document.getElementById('exp-summary-total-bar');if(!bar)return;
@@ -1812,6 +1887,16 @@ function updateSummaryBar(){
   }
   bar.textContent=txt;
 }
+function editBudget(){
+  var cur=trip.currency||'';
+  var v=prompt('設定旅行預算（'+cur+'）\n留空或輸入 0 則不設定',trip.budget||'');
+  if(v===null)return;
+  var n=parseInt(v,10)||0;
+  trip.budget=n>0?n:0;
+  saveData();
+  if(expSummaryOpen)renderExpSummary();
+  updateSummaryBar();
+}
 
 /* ── MISC ── */
 function switchTab(tab,btn){
@@ -1822,7 +1907,9 @@ function switchTab(tab,btn){
   btn.classList.add('active');
   var fab=document.getElementById('exp-fab');
   if(fab){if(tab==='expense'&&editMode)fab.classList.add('show');else fab.classList.remove('show');}
-  if(tab==='expense'){expViewDay=currentDay;expCatFilter=null;renderExpenses();}
+  var appEl=document.getElementById('app');
+  if(tab==='expense'){appEl&&appEl.classList.add('expense-mode');expViewDay=currentDay;expCatFilter=null;renderExpenses();}
+  else{appEl&&appEl.classList.remove('expense-mode');}
   if(tab==='prep'){if(activeListTab==='prep')renderPrep();else renderWish();}
   if(tab==='pokecenter'){renderPokeCenters();}
   if(tab==='map'){
@@ -2420,6 +2507,7 @@ function renderPokeCenters(){
           '<div class="pc-name">'+escHtml(item.name)+'</div>'+
           (item.city?'<div class="pc-city">📍 '+escHtml(item.city)+'</div>':'')+
           (item.note?'<div class="pc-note">📝 '+escHtml(item.note)+'</div>':'')+
+          (item.checked?'<div class="pc-visit-date">🗓 <input type="date" value="'+(item.visitDate||'')+'" onchange="setPCDate('+item.id+',this.value)" onclick="event.stopPropagation()"></div>':'')+
         '</div>'+
         (item.custom?'<button class="pc-del-btn" onclick="deletePC('+item.id+')">✕</button>':'')+
       '</div>';
@@ -2451,6 +2539,10 @@ function deletePC(id){
   pokeCenterItems=pokeCenterItems.filter(function(i){return i.id!==id;});
   saveData();renderPokeCenters();
 }
+function setPCDate(id,date){
+  var item=pokeCenterItems.filter(function(i){return i.id===id;})[0];
+  if(item){item.visitDate=date;saveData();}
+}
 /* ── PREP TAB ── */
 function initPrepDefaults(){
   var idC=1;
@@ -2477,6 +2569,7 @@ function renderPrep(){
   var html='';
   catOrder.forEach(function(cat){
     html+='<div class="prep-cat-group"><div class="prep-cat-title">'+escHtml(cat)+'</div>';
+    html+='<div class="prep-items-grid">';
     cats[cat].forEach(function(item){
       html+='<div class="prep-item">'+
         '<input type="checkbox" class="prep-check"'+(item.checked?' checked':'')+' onchange="togglePrepItem('+item.id+',this.checked)">'+
@@ -2484,6 +2577,7 @@ function renderPrep(){
         (item.custom?'<button class="prep-del-btn" onclick="deletePrepItem('+item.id+')">✕</button>':'')+
       '</div>';
     });
+    html+='</div>';
     html+='</div>';
   });
   var catOpts=PREP_DEFAULTS.map(function(g){return'<option>'+g.cat+'</option>';}).join('');
