@@ -308,6 +308,15 @@ select.field-input option{background:#880000;color:white;}
 .pc-note{font-size:11px;color:var(--mid);margin-top:3px;font-style:italic;}
 .pc-done .pc-name{text-decoration:line-through;opacity:.45;}
 .pc-del-btn{background:none;border:none;color:#CC0000;font-size:13px;padding:4px 6px;cursor:pointer;opacity:.5;flex-shrink:0;}
+.pc-map-set-loc{background:none;border:1.5px solid #3B4CCA;border-radius:8px;color:#3B4CCA;font-size:10px;padding:3px 8px;cursor:pointer;margin-top:4px;font-family:'Noto Sans TC',sans-serif;display:inline-block;white-space:nowrap;}
+.pc-map-toggle-btn{background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.35);border-radius:8px;color:white;font-size:11px;padding:4px 10px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;flex-shrink:0;white-space:nowrap;margin-left:auto;}
+.pc-map-toggle-btn.active{background:rgba(255,255,255,.9);color:#CC0000;}
+.mem-cmp-sel-dot{width:22px;height:22px;border-radius:50%;border:2.5px solid #CC0000;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:white;transition:background .15s;}
+.mem-cmp-sel-dot.on{background:#CC0000;}
+.mem-cmp-row{display:flex;border-bottom:1px solid #f0e8dc;padding:8px 0;gap:6px;}
+.mem-cmp-label{font-size:11px;color:var(--mid);width:64px;flex-shrink:0;padding-top:2px;}
+.mem-cmp-cell{flex:1;font-size:12px;font-weight:600;color:var(--deep);}
+.mem-cmp-minibar{height:8px;border-radius:4px;margin-top:3px;transition:width .4s;}
 .pc-visit-date{font-size:11px;color:var(--mid);margin-top:4px;}
 .pc-visit-date input[type=date]{border:1px solid #FFE082;border-radius:6px;padding:3px 6px;font-size:11px;background:var(--light);color:var(--deep);font-family:var(--sans,sans-serif);}
 .pc-region-header{font-size:11px;font-weight:700;color:#CC0000;letter-spacing:.08em;padding:12px 4px 6px;margin-top:4px;border-top:1px solid var(--warm);}
@@ -353,7 +362,7 @@ select.field-input option{background:#880000;color:white;}
       </div>
     </button>
   </div>
-  <div class="home-version">V1.04</div>
+  <div class="home-version">V1.05</div>
 </div>
 
 <div id="setup-screen">
@@ -522,6 +531,7 @@ select.field-input option{background:#880000;color:white;}
     <button onclick="showHome()" style="background:rgba(255,255,255,.15);border:none;border-radius:10px;color:white;padding:8px 14px;font-family:'Noto Sans TC',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap">← 返回</button>
     <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:white;line-height:1.7;text-shadow:1px 1px 0 rgba(0,0,0,.3);flex:1">⭐ 美好回憶</div>
     <button onclick="document.getElementById('xlsx-import-input').click()" style="background:rgba(255,255,255,.15);border:none;border-radius:10px;color:white;padding:8px 12px;font-family:'Noto Sans TC',sans-serif;font-size:12px;cursor:pointer;white-space:nowrap;flex-shrink:0">📥 匯入</button>
+    <button id="mem-cmp-btn" onclick="toggleMemCompare()" style="background:rgba(255,255,255,.15);border:none;border-radius:10px;color:white;padding:8px 12px;font-family:'Noto Sans TC',sans-serif;font-size:12px;cursor:pointer;white-space:nowrap;flex-shrink:0">📊 比較</button>
   </div>
   <div id="mem-list" style="padding:16px;flex:1"></div>
 </div>
@@ -606,34 +616,34 @@ var pokeCenterItems=[];
 var activeListTab='prep';
 var POKE_CENTERS_DEFAULT=[
   /* 北海道/東北 */
-  {name:'寶可夢中心 北海道',city:'北海道・札幌 大丸札幌8F',region:'北海道/東北'},
-  {name:'寶可夢中心 東北',city:'宮城・仙台 仙台PARCO 3F',region:'北海道/東北'},
-  {name:'寶可夢商店 新千歲機場',city:'北海道・千歲 新千歲空港 2F',region:'北海道/東北'},
+  {name:'寶可夢中心 北海道',city:'北海道・札幌 大丸札幌8F',region:'北海道/東北',lat:43.0643,lng:141.3502},
+  {name:'寶可夢中心 東北',city:'宮城・仙台 仙台PARCO 3F',region:'北海道/東北',lat:38.2531,lng:140.8794},
+  {name:'寶可夢商店 新千歲機場',city:'北海道・千歲 新千歲空港 2F',region:'北海道/東北',lat:42.7752,lng:141.6927},
   /* 關東 */
-  {name:'寶可夢中心 TOKYO DX',city:'東京・日本橋 高島屋S.C. 5F',region:'關東'},
-  {name:'寶可夢中心 MEGA TOKYO ※休業中',city:'東京・池袋 Sunshine City 2F',region:'關東'},
-  {name:'寶可夢中心 SHIBUYA',city:'東京・渋谷 渋谷PARCO 6F',region:'關東'},
-  {name:'寶可夢中心 天空之樹商場',city:'東京・押上 東京晴空塔城 4F',region:'關東'},
-  {name:'寶可夢中心 TOKYO BAY',city:'千葉・船橋 LaLaport TOKYO-BAY',region:'關東'},
-  {name:'寶可夢中心 橫濱',city:'神奈川・橫濱 丸井City 8F',region:'關東'},
-  {name:'寶可夢中心 橫濱衛星店',city:'神奈川・橫濱西口 JOINUS 2F',region:'關東'},
-  {name:'寶可夢商店 東京車站',city:'東京・丸之內 東京一番街 1F',region:'關東'},
-  {name:'寶可夢商店 木更津 Outlet',city:'千葉・木更津 三井Outlet 2F',region:'關東'},
-  {name:'寶可夢商店 成田機場',city:'千葉・成田 第1航廈 4F',region:'關東'},
+  {name:'寶可夢中心 TOKYO DX',city:'東京・日本橋 高島屋S.C. 5F',region:'關東',lat:35.6814,lng:139.7747},
+  {name:'寶可夢中心 MEGA TOKYO ※休業中',city:'東京・池袋 Sunshine City 2F',region:'關東',lat:35.7296,lng:139.7189},
+  {name:'寶可夢中心 SHIBUYA',city:'東京・渋谷 渋谷PARCO 6F',region:'關東',lat:35.6600,lng:139.6980},
+  {name:'寶可夢中心 天空之樹商場',city:'東京・押上 東京晴空塔城 4F',region:'關東',lat:35.7101,lng:139.8107},
+  {name:'寶可夢中心 TOKYO BAY',city:'千葉・船橋 LaLaport TOKYO-BAY',region:'關東',lat:35.6984,lng:140.0229},
+  {name:'寶可夢中心 橫濱',city:'神奈川・橫濱 丸井City 8F',region:'關東',lat:35.4660,lng:139.6218},
+  {name:'寶可夢中心 橫濱衛星店',city:'神奈川・橫濱西口 JOINUS 2F',region:'關東',lat:35.4672,lng:139.6142},
+  {name:'寶可夢商店 東京車站',city:'東京・丸之內 東京一番街 1F',region:'關東',lat:35.6812,lng:139.7671},
+  {name:'寶可夢商店 木更津 Outlet',city:'千葉・木更津 三井Outlet 2F',region:'關東',lat:35.3897,lng:139.9264},
+  {name:'寶可夢商店 成田機場',city:'千葉・成田 第1航廈 4F',region:'關東',lat:35.7653,lng:140.3864},
   /* 中部 */
-  {name:'寶可夢中心 名古屋',city:'愛知・名古屋 名古屋PARCO 東館2F',region:'中部'},
-  {name:'寶可夢中心 金沢',city:'石川・金沢 金沢フォーラス 5F',region:'中部'},
-  {name:'寶可夢商店 御殿場 Outlet',city:'靜岡・御殿場 御殿場プレミアムアウトレット',region:'中部'},
+  {name:'寶可夢中心 名古屋',city:'愛知・名古屋 名古屋PARCO 東館2F',region:'中部',lat:35.1694,lng:136.9076},
+  {name:'寶可夢中心 金沢',city:'石川・金沢 金沢フォーラス 5F',region:'中部',lat:36.5614,lng:136.6561},
+  {name:'寶可夢商店 御殿場 Outlet',city:'靜岡・御殿場 御殿場プレミアムアウトレット',region:'中部',lat:35.2994,lng:138.9353},
   /* 關西 */
-  {name:'寶可夢中心 京都',city:'京都・烏丸 SUINA室町 2F',region:'關西'},
-  {name:'寶可夢中心 大阪DX',city:'大阪・心斎橋 大丸心斎橋 9F',region:'關西'},
-  {name:'寶可夢中心 大阪',city:'大阪・梅田 LUCUA SOUTH 1F',region:'關西'},
+  {name:'寶可夢中心 京都',city:'京都・烏丸 SUINA室町 2F',region:'關西',lat:35.0036,lng:135.7599},
+  {name:'寶可夢中心 大阪DX',city:'大阪・心斎橋 大丸心斎橋 9F',region:'關西',lat:34.6733,lng:135.5010},
+  {name:'寶可夢中心 大阪',city:'大阪・梅田 LUCUA SOUTH 1F',region:'關西',lat:34.7024,lng:135.4959},
   /* 中國/四國 */
-  {name:'寶可夢中心 廣島',city:'廣島・廣島駅 ekie 2F',region:'中國/四國'},
-  {name:'寶可夢中心 香川',city:'香川・高松 丸亀町グリーン',region:'中國/四國'},
+  {name:'寶可夢中心 廣島',city:'廣島・廣島駅 ekie 2F',region:'中國/四國',lat:34.3964,lng:132.4746},
+  {name:'寶可夢中心 香川',city:'香川・高松 丸亀町グリーン',region:'中國/四國',lat:34.3408,lng:134.0483},
   /* 九州/沖繩 */
-  {name:'寶可夢中心 福岡',city:'福岡・博多 博多マルイ 2F',region:'九州/沖繩'},
-  {name:'寶可夢中心 沖繩',city:'沖縄・北中城 AEON Mall沖縄ライカム',region:'九州/沖繩'},
+  {name:'寶可夢中心 福岡',city:'福岡・博多 博多マルイ 2F',region:'九州/沖繩',lat:33.5898,lng:130.4207},
+  {name:'寶可夢中心 沖繩',city:'沖縄・北中城 AEON Mall沖縄ライカム',region:'九州/沖繩',lat:26.3297,lng:127.7924},
 ];
 var DAY_COLORS=['#CC0000','#1976D2','#388E3C','#F57C00','#7B1FA2','#0097A7','#D81B60','#5D4037','#558B2F','#E65100'];
 var PREP_DEFAULTS=[
@@ -802,16 +812,32 @@ function archiveMemory(){
 }
 function renderMemories(){
   var list=document.getElementById('mem-list');
+  var btn=document.getElementById('mem-cmp-btn');
+  if(btn){btn.style.background=memCompareMode?'rgba(255,255,255,.9)':'rgba(255,255,255,.15)';btn.style.color=memCompareMode?'#CC0000':'white';}
   if(!memories.length){
+    memCompareMode=false;memCompareSelected=[];
     list.innerHTML='<div style="text-align:center;padding:60px 24px;color:#555"><div style="font-size:64px;margin-bottom:16px">🏆</div><div style="font-size:14px;line-height:1.8">還沒有回憶喔！<br>開始你的第一次冒險吧！</div></div>';
     return;
   }
-  list.innerHTML=[].concat(memories).reverse().map(function(m){
+  var cmpBar='';
+  if(memCompareMode){
+    cmpBar='<div style="background:#FFF3CD;border-radius:12px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+      '<span style="font-size:12px;color:#7B5800;flex:1">選擇 2–4 個回憶進行比較（已選 '+memCompareSelected.length+'）</span>'+
+      (memCompareSelected.length>=2?'<button onclick="doMemCompare()" style="background:#CC0000;border:none;border-radius:8px;color:white;padding:6px 14px;font-size:12px;cursor:pointer;font-family:\'Noto Sans TC\',sans-serif">查看比較</button>':'')+
+    '</div>';
+  }
+  list.innerHTML=cmpBar+[].concat(memories).reverse().map(function(m){
     var days=m.trip.days?m.trip.days.length:0;
     var cnt=m.planItems?m.planItems.length:0;
     var tot=m.expenses?m.expenses.reduce(function(s,e){return s+e.amount;},0):0;
-    return'<div style="background:white;border-radius:16px;padding:16px;box-shadow:var(--shadow);border-left:5px solid #FFD700;cursor:pointer;position:relative;margin-bottom:12px" onclick="showMemView('+m.id+')">'+
-      '<button onclick="event.stopPropagation();delMemory('+m.id+')" style="position:absolute;top:12px;right:12px;background:none;border:none;color:#ccc;font-size:18px;cursor:pointer;padding:4px">✕</button>'+
+    var isSel=memCompareSelected.indexOf(m.id)>=0;
+    var borderColor=memCompareMode?(isSel?'#CC0000':'#ddd'):'#FFD700';
+    var clickAct=memCompareMode?'toggleMemCmpSelect('+m.id+')':'showMemView('+m.id+')';
+    return'<div style="background:white;border-radius:16px;padding:16px;box-shadow:var(--shadow);border-left:5px solid '+borderColor+';cursor:pointer;position:relative;margin-bottom:12px;transition:border-color .2s" onclick="'+clickAct+'">'+
+      (memCompareMode
+        ?'<div class="mem-cmp-sel-dot'+(isSel?' on':'')+'" style="position:absolute;top:12px;right:12px">'+(isSel?'<span style="color:white;font-size:13px;font-weight:700">✓</span>':'')+'</div>'
+        :'<button onclick="event.stopPropagation();delMemory('+m.id+')" style="position:absolute;top:12px;right:12px;background:none;border:none;color:#ccc;font-size:18px;cursor:pointer;padding:4px">✕</button>'
+      )+
       '<div style="font-family:\'Press Start 2P\',monospace;font-size:10px;color:#CC0000;margin-bottom:6px;line-height:1.7;padding-right:28px">'+m.trip.dest+'</div>'+
       '<div style="font-size:12px;color:#555;margin-bottom:8px">📅 '+m.trip.startDate.replace(/-/g,'/')+' → '+m.trip.endDate.replace(/-/g,'/')+'</div>'+
       '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
@@ -1038,6 +1064,88 @@ function renderMemViewBody(mem){
 function delMemory(id){
   if(!confirm('確定刪除這個回憶？'))return;
   memories=memories.filter(function(m){return m.id!==id;});saveMemories();renderMemories();
+}
+function toggleMemCompare(){
+  if(memories.length<2){alert('需要至少 2 個回憶才能比較');return;}
+  memCompareMode=!memCompareMode;memCompareSelected=[];renderMemories();
+}
+function toggleMemCmpSelect(id){
+  var idx=memCompareSelected.indexOf(id);
+  if(idx>=0)memCompareSelected.splice(idx,1);
+  else if(memCompareSelected.length<4)memCompareSelected.push(id);
+  renderMemories();
+}
+function doMemCompare(){
+  if(memCompareSelected.length<2)return;
+  var mems=memCompareSelected.map(function(id){return memories.filter(function(m){return m.id===id;})[0];}).filter(Boolean);
+  var list=document.getElementById('mem-list');
+  var CAT_COLORS=['#CC0000','#3B4CCA','#FF9800','#4CAF50','#9C27B0','#00BCD4','#795548','#E91E63'];
+  // Build per-memory stats
+  var stats=mems.map(function(m,mi){
+    var days=m.trip.days?m.trip.days.length:0;
+    var tot=m.expenses?m.expenses.reduce(function(s,e){return s+e.amount;},0):0;
+    var avg=days?Math.round(tot/days):0;
+    // category breakdown
+    var catMap={};
+    if(m.expenses)m.expenses.forEach(function(e){catMap[e.cat]=(catMap[e.cat]||0)+e.amount;});
+    var cats=Object.keys(catMap).sort(function(a,b){return catMap[b]-catMap[a];}).slice(0,5);
+    return{m:m,days:days,tot:tot,avg:avg,catMap:catMap,cats:cats,color:CAT_COLORS[mi%CAT_COLORS.length]};
+  });
+  // Build HTML
+  var colW=Math.floor(100/mems.length);
+  // Header row
+  var headCells=stats.map(function(s){
+    return'<div class="mem-cmp-cell" style="color:'+s.color+';font-size:10px;line-height:1.5">'+
+      '<div style="font-family:monospace;font-weight:700">'+escHtml(s.m.trip.dest)+'</div>'+
+      '<div style="font-weight:400;color:#888;font-size:10px">'+s.m.trip.startDate.replace(/-/g,'/')+'</div>'+
+    '</div>';
+  }).join('');
+  // Data rows
+  function row(label,cells){
+    return'<div class="mem-cmp-row"><div class="mem-cmp-label">'+label+'</div>'+cells.join('')+'</div>';
+  }
+  var daysRow=row('天數',stats.map(function(s){return'<div class="mem-cmp-cell">'+s.days+' 天</div>';}));
+  var curRow=row('幣別',stats.map(function(s){return'<div class="mem-cmp-cell">'+escHtml(s.m.trip.currency||'JPY')+'</div>';}));
+  var totRow=row('總花費',stats.map(function(s){return'<div class="mem-cmp-cell">'+s.tot.toLocaleString()+'</div>';}));
+  var avgRow=row('每日均費',stats.map(function(s){return'<div class="mem-cmp-cell">'+s.avg.toLocaleString()+'</div>';}));
+  // Category breakdown — collect all cats across all mems
+  var allCats={};
+  stats.forEach(function(s){Object.keys(s.catMap).forEach(function(c){allCats[c]=(allCats[c]||0)+s.catMap[c];});});
+  var topCats=Object.keys(allCats).sort(function(a,b){return allCats[b]-allCats[a];}).slice(0,5);
+  var catRows=topCats.map(function(cat){
+    var cells=stats.map(function(s){
+      var pct=s.tot?Math.round((s.catMap[cat]||0)/s.tot*100):0;
+      var amt=s.catMap[cat]||0;
+      return'<div class="mem-cmp-cell">'+
+        '<div style="font-size:11px">'+pct+'% <span style="color:#888;font-weight:400">'+(amt?amt.toLocaleString():'—')+'</span></div>'+
+        '<div class="mem-cmp-minibar" style="width:'+pct+'%;background:'+s.color+'"></div>'+
+      '</div>';
+    });
+    return row(cat,cells);
+  }).join('');
+  // PC visits
+  var pcRows='';
+  var anyPCV=stats.some(function(s){return s.m.pokeCenterVisits&&s.m.pokeCenterVisits.length;});
+  if(anyPCV){
+    pcRows=row('中心',stats.map(function(s){
+      var n=s.m.pokeCenterVisits?s.m.pokeCenterVisits.length:0;
+      return'<div class="mem-cmp-cell">'+n+' 間</div>';
+    }));
+  }
+  var html='<div style="margin-bottom:12px;display:flex;align-items:center;gap:8px">'+
+    '<button onclick="memCompareBack()" style="background:white;border:2px solid #ddd;border-radius:10px;padding:8px 14px;font-size:13px;cursor:pointer;font-family:sans-serif">← 返回</button>'+
+    '<div style="font-size:13px;font-weight:700;color:var(--deep)">旅行比較</div>'+
+  '</div>'+
+  '<div style="background:white;border-radius:16px;padding:16px;box-shadow:var(--shadow)">'+
+    '<div class="mem-cmp-row" style="border-bottom:2px solid #CC0000;margin-bottom:4px"><div class="mem-cmp-label"></div>'+headCells+'</div>'+
+    daysRow+curRow+totRow+avgRow+
+    (topCats.length?'<div style="font-size:11px;font-weight:700;color:var(--mid);padding:10px 0 4px;letter-spacing:.08em">各類別</div>'+catRows:'')+
+    pcRows+
+  '</div>';
+  list.innerHTML=html;
+}
+function memCompareBack(){
+  memCompareMode=false;memCompareSelected=[];renderMemories();
 }
 function saveMemories(){try{localStorage.setItem('tv_mem',JSON.stringify(memories));}catch(e){}}
 function loadMemories(){try{memories=JSON.parse(localStorage.getItem('tv_mem')||'[]');}catch(e){memories=[];}}
@@ -2112,6 +2220,8 @@ function onTouchEnd(e){
 
 /* ── MAP ── */
 var mapInstance=null,mapViewDay=0,mapPinningId=null,mapMarkers=[];
+var pcLayerMarkers=[],pcLayerVisible=false,pcSetLocationId=null;
+var memCompareMode=false,memCompareSelected=[];
 function initMap(){
   if(mapInstance||typeof L==='undefined')return;
   mapInstance=L.map('map-container').setView([35.6762,139.6503],12);
@@ -2119,12 +2229,19 @@ function initMap(){
     attribution:'© <a href="https://www.openstreetmap.org/copyright">OSM</a>',maxZoom:19
   }).addTo(mapInstance);
   mapInstance.on('click',function(ev){
-    if(!mapPinningId)return;
-    var pi=planItems.filter(function(p){return p.id===mapPinningId;})[0];
-    if(pi){pi.lat=ev.latlng.lat;pi.lng=ev.latlng.lng;saveData();}
-    mapPinningId=null;
-    document.getElementById('map-pin-banner').classList.remove('show');
-    renderMapPins();renderTimeline();
+    if(mapPinningId){
+      var pi=planItems.filter(function(p){return p.id===mapPinningId;})[0];
+      if(pi){pi.lat=ev.latlng.lat;pi.lng=ev.latlng.lng;saveData();}
+      mapPinningId=null;
+      document.getElementById('map-pin-banner').classList.remove('show');
+      renderMapPins();renderTimeline();
+    } else if(pcSetLocationId){
+      var pc=pokeCenterItems.filter(function(p){return p.id===pcSetLocationId;})[0];
+      if(pc){pc.lat=ev.latlng.lat;pc.lng=ev.latlng.lng;saveData();}
+      pcSetLocationId=null;
+      document.getElementById('map-pin-banner').classList.remove('show');
+      if(pcLayerVisible)renderPCLayer();
+    }
   });
 }
 function renderMapDayTabs(){
@@ -2133,7 +2250,8 @@ function renderMapDayTabs(){
   el.innerHTML='<button class="map-day-btn'+(mapViewDay===-1?' active':'')+'" onclick="selectMapDay(-1)">全程</button>'+
     trip.days.map(function(d,i){
       return'<button class="map-day-btn'+(i===mapViewDay?' active':'')+'" onclick="selectMapDay('+i+')">'+d.label+'</button>';
-    }).join('');
+    }).join('')+
+    '<button class="pc-map-toggle-btn'+(pcLayerVisible?' active':'')+'" onclick="togglePCLayer()">⬤ 中心</button>';
 }
 function selectMapDay(i){
   mapViewDay=i;renderMapDayTabs();renderMapPins();
@@ -2224,6 +2342,54 @@ function renderMapPins(){
   }
   if(bounds.length===1)mapInstance.setView(bounds[0],15);
   else if(bounds.length>1)mapInstance.fitBounds(bounds,{padding:[40,40]});
+}
+function getPCCoords(item){
+  var def=POKE_CENTERS_DEFAULT.filter(function(c){return c.name===item.name;})[0];
+  if(def&&def.lat!=null)return{lat:def.lat,lng:def.lng};
+  if(item.lat!=null&&item.lng!=null)return{lat:item.lat,lng:item.lng};
+  return null;
+}
+function createPokeballIcon(checked){
+  var top=checked?'#CC0000':'#888888';
+  var btn=checked?'white':'#cccccc';
+  var html='<div style="width:28px;height:28px;border-radius:50%;border:3px solid #1a1a1a;overflow:hidden;position:relative;box-shadow:0 2px 8px rgba(0,0,0,.45)">'+
+    '<div style="position:absolute;top:0;left:0;right:0;height:50%;background:'+top+'"></div>'+
+    '<div style="position:absolute;bottom:0;left:0;right:0;height:50%;background:white"></div>'+
+    '<div style="position:absolute;left:0;right:0;top:50%;height:3px;background:#1a1a1a;transform:translateY(-50%)"></div>'+
+    '<div style="position:absolute;left:50%;top:50%;width:9px;height:9px;border-radius:50%;background:'+btn+';border:2.5px solid #1a1a1a;transform:translate(-50%,-50%)"></div>'+
+    '</div>';
+  return L.divIcon({html:html,iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-18],className:''});
+}
+function renderPCLayer(){
+  pcLayerMarkers.forEach(function(m){m.remove();});pcLayerMarkers=[];
+  if(!mapInstance||!pcLayerVisible)return;
+  pokeCenterItems.forEach(function(item){
+    var coords=getPCCoords(item);if(!coords)return;
+    var icon=createPokeballIcon(item.checked);
+    var popup='<b>'+escHtml(item.name)+'</b>';
+    if(item.city)popup+='<br><small style="color:#666">'+escHtml(item.city)+'</small>';
+    if(item.checked)popup+='<br><span style="color:#CC0000;font-weight:700">✅ 已造訪</span>'+(item.visitDate?' ('+item.visitDate+')':'');
+    else popup+='<br><span style="color:#888">○ 尚未造訪</span>';
+    L.marker([coords.lat,coords.lng],{icon:icon}).bindPopup(popup).addTo(mapInstance);
+    pcLayerMarkers.push(L.marker([coords.lat,coords.lng],{icon:icon}));
+    pcLayerMarkers[pcLayerMarkers.length-1].remove();
+    var m2=L.marker([coords.lat,coords.lng],{icon:icon}).bindPopup(popup).addTo(mapInstance);
+    pcLayerMarkers[pcLayerMarkers.length-1]=m2;
+  });
+}
+function togglePCLayer(){
+  pcLayerVisible=!pcLayerVisible;
+  renderPCLayer();renderMapDayTabs();
+}
+function startSetPCLocation(id){
+  pcSetLocationId=id;
+  var mapBtn=document.getElementById('tab-map-btn');
+  if(mapBtn)switchTab('map',mapBtn);
+  setTimeout(function(){
+    initMap();if(mapInstance)mapInstance.invalidateSize();
+    var banner=document.getElementById('map-pin-banner');
+    if(banner){banner.querySelector('span').textContent='📍 點地圖設定寶可夢中心位置';banner.classList.add('show');}
+  },100);
 }
 function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function startMapPin(itemId){
@@ -2511,7 +2677,7 @@ function renderPokeCenters(){
           (item.note?'<div class="pc-note">📝 '+escHtml(item.note)+'</div>':'')+
           (item.checked?'<div class="pc-visit-date">🗓 <input type="date" value="'+(item.visitDate||'')+'" onchange="setPCDate('+item.id+',this.value)" onclick="event.stopPropagation()"></div>':'')+
         '</div>'+
-        (item.custom?'<button class="pc-del-btn" onclick="deletePC('+item.id+')">✕</button>':'')+
+        (item.custom?'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><button class="pc-del-btn" onclick="deletePC('+item.id+')">✕</button><button class="pc-map-set-loc" onclick="startSetPCLocation('+item.id+')">'+(item.lat!=null?'📍 更新位置':'📍 設定位置')+'</button></div>':'')+
       '</div>';
     });
   }
