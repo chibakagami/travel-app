@@ -228,6 +228,17 @@ select.field-input option{background:#880000;color:white;}
 .expense-del{background:none;border:none;color:#ccc;font-size:16px;cursor:pointer;padding:2px;}
 .exp-edit-panel{display:none;margin-top:10px;padding-top:10px;border-top:1px solid #FFE082;}
 .exp-edit-panel.open{display:block;}
+/* PAYMENT METHOD */
+.pay-tag{display:inline-flex;align-items:center;gap:2px;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600;margin-left:4px;vertical-align:middle;}
+.pay-cash{background:#e8f5e9;color:#2e7d32;}.pay-card{background:#e3f2fd;color:#1565c0;}.pay-ic{background:#fce4ec;color:#c2185b;}
+.pay-method-btn{flex:1;background:white;border:2px solid #FFE082;border-radius:10px;padding:7px 4px;font-size:11px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .15s;}
+.pay-method-btn.active{border-color:#CC0000;background:rgba(204,0,0,.07);color:#CC0000;font-weight:700;}
+/* PHOTOS */
+.photo-thumb{width:100%;max-width:300px;border-radius:8px;margin-top:6px;cursor:pointer;display:block;box-shadow:0 2px 8px rgba(0,0,0,.12);}
+.photo-upload-btn{background:rgba(59,76,202,.08);border:1.5px dashed #3B4CCA;border-radius:8px;color:#3B4CCA;font-size:11px;padding:5px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-family:'Noto Sans TC',sans-serif;}
+.photo-del-btn{background:none;border:none;color:#ccc;font-size:13px;cursor:pointer;padding:0 4px;display:none;}
+.photo-viewer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:500;align-items:center;justify-content:center;cursor:pointer;}
+.photo-viewer-overlay.open{display:flex;}.photo-viewer-overlay img{max-width:95vw;max-height:90vh;border-radius:10px;object-fit:contain;}
 /* FAB */
 .fab{position:fixed;bottom:80px;right:20px;width:52px;height:52px;border-radius:50%;background:#CC0000;color:white;border:none;font-size:26px;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(204,0,0,.5);z-index:50;line-height:1;}
 .fab.show{display:flex;}
@@ -574,11 +585,23 @@ select.field-input option{background:#880000;color:white;}
         <select class="form-input" id="add-exp-day"></select>
       </div>
     </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;color:var(--mid);margin-bottom:6px">付款方式</div>
+      <div style="display:flex;gap:8px" id="add-exp-pay-row">
+        <button type="button" class="pay-method-btn active" data-pay="cash" onclick="selectAddExpPay('cash')">💴 現金</button>
+        <button type="button" class="pay-method-btn" data-pay="card" onclick="selectAddExpPay('card')">💳 信用卡</button>
+        <button type="button" class="pay-method-btn" data-pay="ic" onclick="selectAddExpPay('ic')">🎴 IC卡</button>
+      </div>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <button class="btn-add" onclick="closeAddExpModal()" style="background:var(--warm);color:var(--mid)">取消</button>
       <button class="btn-add" onclick="submitAddExp()">儲存</button>
     </div>
   </div>
+</div>
+<!-- PHOTO VIEWER -->
+<div class="photo-viewer-overlay" id="photo-viewer" onclick="closePhotoViewer()">
+  <img id="photo-viewer-img" src="" alt="">
 </div>
 <!-- EXPORT MODAL -->
 <div class="modal-overlay" id="export-modal" onclick="if(event.target===this)closeExportModal()">
@@ -607,6 +630,8 @@ var editMode=false,_id=1;
 var expViewDay=0; // which day is selected in expense tab
 var expCatFilter=null; // null = all
 var addExpCatSelected=null;
+var addExpPaySelected='cash';
+var photoDB=null;
 var stayH=1,stayM=0;
 var tcDrums={};
 var dayStartTimes={};// {dayIdx: minutes}
@@ -1371,6 +1396,7 @@ function renderTimeline(){
         '</div>'+
         (function(){var url=pi&&pi.lat!=null?'https://maps.google.com/maps?q='+pi.lat+','+pi.lng:'https://www.google.com/maps/search/'+encodeURIComponent(item.name);return'<a class="plan-maps-link" href="'+url+'" target="_blank" rel="noopener">📍 Google 地圖</a>';})()+
         '</div>'+
+      '<div data-photoslot="plan-'+item.id+'"></div>'+
         (editMode?'<div class="plan-actions">'+
           '<button class="plan-edit-btn" onclick="toggleEditPanel('+item.id+')">✏️</button>'+
           '<button class="plan-copy-btn" onclick="toggleCopyPanel('+item.id+')" title="複製到其他天">📋</button>'+
@@ -1389,6 +1415,11 @@ function renderTimeline(){
           '<div style="display:flex;gap:8px;margin-top:8px">'+
             '<button class="pin-set-btn" onclick="startMapPin('+item.id+')">📍 '+(hasPin?'更新地圖位置':'設定地圖位置')+'</button>'+
             (hasPin?'<button class="pin-remove-btn" onclick="removeMapPin('+item.id+')">✕ 移除</button>':'')+
+          '</div>'+
+          '<div style="display:flex;align-items:center;gap:8px;margin-top:8px">'+
+            '<input type="file" accept="image/*" id="photo-file-plan-'+item.id+'" onchange="uploadPhoto(\'plan-'+item.id+'\',this)" style="display:none">'+
+            '<button class="photo-upload-btn" onclick="document.getElementById(\'photo-file-plan-'+item.id+'\').click()">📷 照片</button>'+
+            '<button class="photo-del-btn" id="phdel-plan-'+item.id+'" onclick="deletePhotoAndRefresh(\'plan-'+item.id+'\')">🗑 刪除</button>'+
           '</div>'+
           '<button class="btn-save-edit" onclick="saveEdit('+item.id+')" style="margin-top:10px">儲存</button>'+
         '</div>'+
@@ -1469,6 +1500,7 @@ function renderTimeline(){
     }
   });
   wrap.innerHTML=html;
+  setTimeout(loadPhotoSlots,0);
 
   // Init open drums
   items.forEach(function(item){
@@ -1647,17 +1679,24 @@ function renderExpenses(){
     return;
   }
   // Map filtered back to global indices
+  var PAY_META={cash:{label:'💴 現金',cls:'pay-cash'},card:{label:'💳 信用卡',cls:'pay-card'},ic:{label:'🎴 IC卡',cls:'pay-ic'}};
   list.innerHTML=filtered.map(function(e){
     var gi=expenses.indexOf(e);
     var isOpen=openExpEditIdx===gi;
+    var payKey=e.pay||'cash';
+    var pm=PAY_META[payKey]||PAY_META.cash;
+    var photoKey='exp-'+gi;
     return'<div class="expense-item">'+
       '<div class="exp-row">'+
         '<div class="expense-icon">'+e.cat+'</div>'+
-        '<div class="expense-info"><div class="expense-name">'+e.name+'</div></div>'+
+        '<div class="expense-info"><div class="expense-name">'+e.name+'</div>'+
+          '<span class="pay-tag '+pm.cls+'">'+pm.label+'</span>'+
+        '</div>'+
         '<div class="expense-amount">'+e.amount.toLocaleString()+'</div>'+
         (editMode?'<button class="plan-edit-btn" onclick="toggleExpEdit('+gi+')" style="font-size:12px">✏️</button>':'') +
         (editMode?'<button class="expense-del" onclick="delExp('+gi+')">✕</button>':'')+
       '</div>'+
+      '<div data-photoslot="'+photoKey+'"></div>'+
       (editMode?
         '<div class="exp-edit-panel'+(isOpen?' open':'')+'" id="exp-ep'+gi+'">'+
           '<div class="edit-row">'+
@@ -1668,6 +1707,19 @@ function renderExpenses(){
             '<select class="edit-input" id="expcat'+gi+'">'+EXP_CATS_DEF.map(function(c){return'<option value="'+c.key+'"'+(c.key===e.cat?' selected':'')+'>'+c.icon+' '+c.label+'</option>';}).join('')+'</select>'+
             '<select class="edit-input" id="expday'+gi+'">'+trip.days.map(function(d,di){return'<option value="'+di+'"'+(di===e.dayIdx?' selected':'')+'>'+d.label+' '+d.date+'</option>';}).join('')+'</select>'+
           '</div>'+
+          '<div class="edit-row" style="align-items:center;margin-top:4px">'+
+            '<span style="font-size:11px;color:var(--mid)">付款：</span>'+
+            '<select class="edit-input" id="exppay'+gi+'" style="flex:1">'+
+              '<option value="cash"'+(payKey==='cash'?' selected':'')+'>💴 現金</option>'+
+              '<option value="card"'+(payKey==='card'?' selected':'')+'>💳 信用卡</option>'+
+              '<option value="ic"'+(payKey==='ic'?' selected':'')+'>🎴 IC卡</option>'+
+            '</select>'+
+          '</div>'+
+          '<div style="display:flex;align-items:center;gap:8px;margin-top:6px">'+
+            '<input type="file" accept="image/*" id="photo-file-exp-'+gi+'" onchange="uploadPhoto(\'exp-'+gi+'\',this)" style="display:none">'+
+            '<button class="photo-upload-btn" onclick="document.getElementById(\'photo-file-exp-'+gi+'\').click()">📷 照片</button>'+
+            '<button class="photo-del-btn" id="phdel-exp-'+gi+'" onclick="deletePhotoAndRefresh(\'exp-'+gi+'\')">🗑 刪除</button>'+
+          '</div>'+
           '<button class="btn-save-edit" onclick="saveExpEdit('+gi+')">儲存</button>'+
         '</div>'
       :'')+
@@ -1675,6 +1727,7 @@ function renderExpenses(){
   }).join('');
   updateSummaryBar();
   if(expSummaryOpen)renderExpSummary();
+  setTimeout(loadPhotoSlots,0);
 }
 function selectExpDay(i){expViewDay=i;expCatFilter=null;renderExpenses();}
 function setExpCatFilter(cat){expCatFilter=(cat==='全部')?null:cat;renderExpenses();}
@@ -1682,10 +1735,12 @@ function toggleExpEdit(i){openExpEditIdx=openExpEditIdx===i?null:i;renderExpense
 function saveExpEdit(i){
   var nm=document.getElementById('expname'+i),am=document.getElementById('expamt'+i);
   var ca=document.getElementById('expcat'+i),di=document.getElementById('expday'+i);
+  var py=document.getElementById('exppay'+i);
   if(nm&&nm.value.trim())expenses[i].name=nm.value.trim();
   if(am&&+am.value>0)expenses[i].amount=+am.value;
   if(ca)expenses[i].cat=ca.value;
   if(di)expenses[i].dayIdx=+di.value;
+  if(py)expenses[i].pay=py.value;
   openExpEditIdx=null;renderExpenses();saveData();
 }
 function openAddExpModal(){
@@ -1704,9 +1759,15 @@ function openAddExpModal(){
   if(dayEl)dayEl.innerHTML=trip.days.map(function(d,i){return'<option value="'+i+'"'+(i===expViewDay?' selected':'')+'>'+d.label+' ('+d.date+')</option>';}).join('');
   document.getElementById('add-exp-name').value='';
   document.getElementById('add-exp-amount').value='';
+  addExpPaySelected='cash';
+  document.querySelectorAll('#add-exp-pay-row .pay-method-btn').forEach(function(b){b.classList.toggle('active',b.dataset.pay==='cash');});
   document.getElementById('add-exp-modal').classList.add('open');
 }
 function closeAddExpModal(){document.getElementById('add-exp-modal').classList.remove('open');}
+function selectAddExpPay(pay){
+  addExpPaySelected=pay;
+  document.querySelectorAll('#add-exp-pay-row .pay-method-btn').forEach(function(b){b.classList.toggle('active',b.dataset.pay===pay);});
+}
 function selectAddExpCat(key){
   addExpCatSelected=key;
   document.querySelectorAll('.exp-cat-item').forEach(function(el){el.classList.remove('sel');});
@@ -1719,7 +1780,7 @@ function submitAddExp(){
   var dayEl=document.getElementById('add-exp-day');
   var dayIdx=dayEl?+dayEl.value:expViewDay;
   if(!name){alert('請輸入名稱');return;}if(!amount||amount<=0){alert('請輸入金額');return;}
-  expenses.push({dayIdx:dayIdx,name:name,amount:amount,cat:addExpCatSelected||'🍜'});
+  expenses.push({dayIdx:dayIdx,name:name,amount:amount,cat:addExpCatSelected||'🍜',pay:addExpPaySelected||'cash'});
   expViewDay=dayIdx;
   closeAddExpModal();renderExpenses();saveData();
 }
@@ -1982,7 +2043,29 @@ function renderExpSummary(){
         (grandTwd?'<div style="font-size:11px;color:#888;margin-top:1px">≈ NT$ '+grandTwd.toLocaleString()+'</div>':'')+
       '</div></div>'+
     '<div style="margin-bottom:8px">'+dayRows+'</div>'+
-    '<div style="border-top:1px solid rgba(255,255,255,.1);padding-top:10px">'+buildPieSVG(catMap,grandTotal)+catRows+'</div>';
+    '<div style="border-top:1px solid rgba(255,255,255,.1);padding-top:10px">'+buildPieSVG(catMap,grandTotal)+catRows+'</div>'+
+    buildPaySummary();
+}
+function buildPaySummary(){
+  if(!expenses.length)return'';
+  var PAY_META={cash:{label:'💴 現金',color:'#81c784'},card:{label:'💳 信用卡',color:'#64b5f6'},ic:{label:'🎴 IC卡',color:'#f48fb1'}};
+  var payMap={};
+  expenses.forEach(function(e){var k=e.pay||'cash';payMap[k]=(payMap[k]||0)+e.amount;});
+  var grandTotal=expenses.reduce(function(s,e){return s+e.amount;},0);
+  var rows=Object.keys(payMap).map(function(k){
+    var pm=PAY_META[k]||{label:k,color:'#aaa'};
+    var pct=grandTotal>0?Math.round(payMap[k]/grandTotal*100):0;
+    return'<div style="margin-bottom:7px">'+
+      '<div style="display:flex;justify-content:space-between;margin-bottom:3px">'+
+        '<span style="color:#aaa;font-size:12px">'+pm.label+'</span>'+
+        '<span style="color:#ccc;font-size:12px;font-family:\'Share Tech Mono\',monospace">'+payMap[k].toLocaleString()+'<span style="color:#888;font-size:11px;margin-left:5px">'+pct+'%</span></span>'+
+      '</div>'+
+      '<div style="background:rgba(255,255,255,.1);border-radius:4px;height:5px;overflow:hidden">'+
+        '<div style="width:'+pct+'%;height:100%;background:'+pm.color+';border-radius:4px"></div>'+
+      '</div></div>';
+  }).join('');
+  return'<div style="border-top:1px solid rgba(255,255,255,.1);padding-top:10px;margin-top:4px">'+
+    '<div style="color:#FFD700;font-size:11px;font-weight:700;letter-spacing:.08em;margin-bottom:8px">💳 付款方式統計</div>'+rows+'</div>';
 }
 function updateSummaryBar(){
   var bar=document.getElementById('exp-summary-total-bar');if(!bar)return;
@@ -2671,11 +2754,17 @@ function renderPokeCenters(){
       }
       html+='<div class="pc-item'+(item.checked?' pc-done':'')+'">'+
         '<input type="checkbox" class="pc-check"'+(item.checked?' checked':'')+' onchange="togglePC('+item.id+',this.checked)">'+
-        '<div class="pc-info">'+
+        '<div class="pc-info" style="flex:1">'+
           '<div class="pc-name">'+escHtml(item.name)+'</div>'+
           (item.city?'<div class="pc-city">📍 '+escHtml(item.city)+'</div>':'')+
           (item.note?'<div class="pc-note">📝 '+escHtml(item.note)+'</div>':'')+
           (item.checked?'<div class="pc-visit-date">🗓 <input type="date" value="'+(item.visitDate||'')+'" onchange="setPCDate('+item.id+',this.value)" onclick="event.stopPropagation()"></div>':'')+
+          '<div data-photoslot="pc-'+item.id+'"></div>'+
+          '<div style="display:flex;align-items:center;gap:6px;margin-top:4px">'+
+            '<input type="file" accept="image/*" id="photo-file-pc-'+item.id+'" onchange="uploadPhoto(\'pc-'+item.id+'\',this)" style="display:none">'+
+            '<button class="photo-upload-btn" style="font-size:10px;padding:3px 8px" onclick="document.getElementById(\'photo-file-pc-'+item.id+'\').click()">📷</button>'+
+            '<button class="photo-del-btn" id="phdel-pc-'+item.id+'" onclick="deletePhotoAndRefresh(\'pc-'+item.id+'\')">🗑</button>'+
+          '</div>'+
         '</div>'+
         (item.custom?'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><button class="pc-del-btn" onclick="deletePC('+item.id+')">✕</button><button class="pc-map-set-loc" onclick="startSetPCLocation('+item.id+')">'+(item.lat!=null?'📍 更新位置':'📍 設定位置')+'</button></div>':'')+
       '</div>';
@@ -2689,6 +2778,7 @@ function renderPokeCenters(){
     '</div>'+
   '</div>';
   el.innerHTML=html;
+  setTimeout(loadPhotoSlots,0);
 }
 function togglePC(id,checked){
   var item=pokeCenterItems.filter(function(i){return i.id===id;})[0];
@@ -2772,6 +2862,95 @@ function addPrepItem(){
 function deletePrepItem(id){
   prepItems=prepItems.filter(function(i){return i.id!==id;});
   saveData();renderPrep();
+}
+
+/* ── INDEXEDDB PHOTO STORE ── */
+function openPhotoDB(cb){
+  if(photoDB){cb(photoDB);return;}
+  var req=indexedDB.open('tv_photos',1);
+  req.onupgradeneeded=function(e){e.target.result.createObjectStore('photos',{keyPath:'id'});};
+  req.onsuccess=function(e){photoDB=e.target.result;cb(photoDB);};
+  req.onerror=function(){cb(null);};
+}
+function savePhoto(key,dataURL,cb){
+  openPhotoDB(function(db){
+    if(!db)return;
+    var tx=db.transaction('photos','readwrite');
+    tx.objectStore('photos').put({id:key,dataURL:dataURL});
+    if(cb)tx.oncomplete=cb;
+  });
+}
+function getPhoto(key,cb){
+  openPhotoDB(function(db){
+    if(!db){cb(null);return;}
+    var tx=db.transaction('photos','readonly');
+    var req=tx.objectStore('photos').get(key);
+    req.onsuccess=function(){cb(req.result?req.result.dataURL:null);};
+    req.onerror=function(){cb(null);};
+  });
+}
+function deletePhoto(key,cb){
+  openPhotoDB(function(db){
+    if(!db){if(cb)cb();return;}
+    var tx=db.transaction('photos','readwrite');
+    tx.objectStore('photos').delete(key);
+    if(cb)tx.oncomplete=cb;
+  });
+}
+function compressImage(file,maxPx,quality,cb){
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var img=new Image();
+    img.onload=function(){
+      var w=img.width,h=img.height;
+      if(w>maxPx||h>maxPx){var s=maxPx/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s);}
+      var canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      cb(canvas.toDataURL('image/jpeg',quality));
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function uploadPhoto(key,input){
+  if(!input.files||!input.files[0])return;
+  compressImage(input.files[0],1200,0.82,function(dataURL){
+    savePhoto(key,dataURL,function(){
+      input.value='';
+      loadPhotoSlots();
+    });
+  });
+}
+function deletePhotoAndRefresh(key){
+  deletePhoto(key,function(){loadPhotoSlots();});
+}
+function loadPhotoSlots(){
+  document.querySelectorAll('[data-photoslot]').forEach(function(el){
+    var key=el.getAttribute('data-photoslot');
+    getPhoto(key,function(dataURL){
+      if(dataURL){
+        el.innerHTML='<img src="'+dataURL+'" class="photo-thumb" onclick="viewPhoto(this.src)">';
+        var delBtn=document.getElementById('phdel-'+key);
+        if(delBtn)delBtn.style.display='inline';
+      }else{
+        el.innerHTML='';
+        var delBtn=document.getElementById('phdel-'+key);
+        if(delBtn)delBtn.style.display='none';
+      }
+    });
+  });
+}
+function viewPhoto(src){
+  var ov=document.getElementById('photo-viewer');
+  var img=document.getElementById('photo-viewer-img');
+  if(!ov||!img)return;
+  img.src=src;
+  ov.classList.add('open');
+}
+function closePhotoViewer(){
+  var ov=document.getElementById('photo-viewer');
+  if(ov)ov.classList.remove('open');
 }
 </script>
 </body>
