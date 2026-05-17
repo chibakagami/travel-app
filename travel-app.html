@@ -237,7 +237,7 @@ select.field-input option{background:#880000;color:white;}
 .photo-thumb{width:100%;max-width:300px;border-radius:8px;margin-top:6px;cursor:pointer;display:block;box-shadow:0 2px 8px rgba(0,0,0,.12);}
 .photo-upload-btn{background:rgba(59,76,202,.08);border:1.5px dashed #3B4CCA;border-radius:8px;color:#3B4CCA;font-size:11px;padding:5px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-family:'Noto Sans TC',sans-serif;}
 .photo-del-btn{background:none;border:none;color:#ccc;font-size:13px;cursor:pointer;padding:0 4px;display:none;}
-.photo-viewer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:500;align-items:center;justify-content:center;cursor:pointer;}
+.photo-viewer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:1200;align-items:center;justify-content:center;cursor:pointer;}
 .photo-viewer-overlay.open{display:flex;}.photo-viewer-overlay img{max-width:95vw;max-height:90vh;border-radius:10px;object-fit:contain;}
 /* FAB */
 .fab{position:fixed;bottom:80px;right:20px;width:52px;height:52px;border-radius:50%;background:#CC0000;color:white;border:none;font-size:26px;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(204,0,0,.5);z-index:50;line-height:1;}
@@ -253,7 +253,7 @@ select.field-input option{background:#880000;color:white;}
 #tab-expense .expense-list{padding:12px 16px;margin-bottom:80px;}
 #tab-expense .empty{padding:40px 16px;}
 /* MODAL */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(44,36,22,.55);z-index:300;align-items:flex-end;justify-content:center;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(44,36,22,.55);z-index:1100;align-items:flex-end;justify-content:center;}
 .modal-overlay.open{display:flex;}
 .modal-sheet{background:white;border-radius:24px 24px 0 0;padding:20px 20px 40px;width:100%;max-width:480px;}
 .modal-handle{width:40px;height:4px;background:var(--warm);border-radius:2px;margin:0 auto 18px;}
@@ -2091,6 +2091,7 @@ function editBudget(){
 
 /* ── MISC ── */
 function switchTab(tab,btn){
+  closeAddExpModal();
   document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');t.style.display='none';});
   document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
   var tc=document.getElementById('tab-'+tab);
@@ -2302,7 +2303,7 @@ function onTouchEnd(e){
 }
 
 /* ── MAP ── */
-var mapInstance=null,mapViewDay=0,mapPinningId=null,mapMarkers=[];
+var mapInstance=null,mapViewDay=0,mapPinningId=null,mapMarkers=[],mapPinOrigLat=null,mapPinOrigLng=null;
 var pcLayerMarkers=[],pcLayerVisible=false,pcSetLocationId=null;
 var memCompareMode=false,memCompareSelected=[];
 function initMap(){
@@ -2465,6 +2466,9 @@ function togglePCLayer(){
   renderPCLayer();renderMapDayTabs();
 }
 function startSetPCLocation(id){
+  var _pc=pokeCenterItems.filter(function(p){return p.id===id;})[0];
+  mapPinOrigLat=_pc&&_pc.lat!=null?_pc.lat:null;
+  mapPinOrigLng=_pc&&_pc.lng!=null?_pc.lng:null;
   pcSetLocationId=id;
   var mapBtn=document.getElementById('tab-map-btn');
   if(mapBtn)switchTab('map',mapBtn);
@@ -2476,6 +2480,9 @@ function startSetPCLocation(id){
 }
 function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function startMapPin(itemId){
+  var _pi=planItems.filter(function(p){return p.id===itemId;})[0];
+  mapPinOrigLat=_pi&&_pi.lat!=null?_pi.lat:null;
+  mapPinOrigLng=_pi&&_pi.lng!=null?_pi.lng:null;
   mapPinningId=itemId;
   document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');t.style.display='none';});
   document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
@@ -2487,8 +2494,27 @@ function startMapPin(itemId){
   document.getElementById('map-pin-banner').classList.add('show');
 }
 function cancelMapPin(){
+  if(mapPinningId){
+    var _pi=planItems.filter(function(p){return p.id===mapPinningId;})[0];
+    if(_pi){
+      if(mapPinOrigLat==null){delete _pi.lat;delete _pi.lng;}
+      else{_pi.lat=mapPinOrigLat;_pi.lng=mapPinOrigLng;}
+      saveData();
+    }
+  }
+  if(pcSetLocationId){
+    var _pc=pokeCenterItems.filter(function(p){return p.id===pcSetLocationId;})[0];
+    if(_pc){
+      if(mapPinOrigLat==null){delete _pc.lat;delete _pc.lng;}
+      else{_pc.lat=mapPinOrigLat;_pc.lng=mapPinOrigLng;}
+      saveData();
+    }
+    pcSetLocationId=null;
+  }
   mapPinningId=null;
+  mapPinOrigLat=null;mapPinOrigLng=null;
   document.getElementById('map-pin-banner').classList.remove('show');
+  renderMapPins();
 }
 function removeMapPin(itemId){
   var pi=planItems.filter(function(p){return p.id===itemId;})[0];
