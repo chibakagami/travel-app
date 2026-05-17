@@ -2454,11 +2454,8 @@ function renderPCLayer(){
     if(item.city)popup+='<br><small style="color:#666">'+escHtml(item.city)+'</small>';
     if(item.checked)popup+='<br><span style="color:#CC0000;font-weight:700">✅ 已造訪</span>'+(item.visitDate?' ('+item.visitDate+')':'');
     else popup+='<br><span style="color:#888">○ 尚未造訪</span>';
-    L.marker([coords.lat,coords.lng],{icon:icon}).bindPopup(popup).addTo(mapInstance);
-    pcLayerMarkers.push(L.marker([coords.lat,coords.lng],{icon:icon}));
-    pcLayerMarkers[pcLayerMarkers.length-1].remove();
-    var m2=L.marker([coords.lat,coords.lng],{icon:icon}).bindPopup(popup).addTo(mapInstance);
-    pcLayerMarkers[pcLayerMarkers.length-1]=m2;
+    var m=L.marker([coords.lat,coords.lng],{icon:icon}).bindPopup(popup).addTo(mapInstance);
+    pcLayerMarkers.push(m);
   });
 }
 function togglePCLayer(){
