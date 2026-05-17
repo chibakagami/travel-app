@@ -1,12 +1,21 @@
-/* Travel App Service Worker – OSM tile cache only */
+/* Travel App Service Worker – OSM tile cache + app shell */
 var TILE_CACHE = 'tv-tiles-v1';
-var APP_CACHE  = 'tv-app-v4';
+var APP_CACHE  = 'tv-app-v5';
+
+var APP_SHELL = [
+  './travel-app.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
+];
 
 self.addEventListener('install', function(e) {
   self.skipWaiting();
   e.waitUntil(
     caches.open(APP_CACHE).then(function(cache) {
-      return cache.add('./travel-app.html').catch(function(){});
+      return Promise.all(APP_SHELL.map(function(url) {
+        return cache.add(url).catch(function(){});
+      }));
     })
   );
 });
@@ -55,5 +64,5 @@ self.addEventListener('fetch', function(e) {
   }
 
   /* All other requests (Leaflet JS/CSS, fonts, xlsx, etc.):
-     fall through to browser's normal network handling – no interference */
+     fall through to browser\'s normal network handling – no interference */
 });
