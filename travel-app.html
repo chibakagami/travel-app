@@ -625,7 +625,7 @@ select.field-input option{background:#880000;color:white;}
 var trip={dest:'',startDate:'',endDate:'',currency:'JPY',days:[]};
 var planItems=[],transports=[],flights=[],expenses=[],memories=[];
 var currentDay=0,exchangeRate=null;
-var memViewDay=0,currentMemId=null,memSummaryOpen=false,memDayExpOpen=false;
+var memViewDay=0,currentMemId=null,memSummaryOpen=false,memDayExpOpen=false,memPCDayOpen=false,memPCAllOpen=false;
 var openTcId=null,openEditId=null,openBpEditId=null,openExpEditIdx=null,openCopyId=null;
 var editMode=false,_id=1;
 var expViewDay=0; // which day is selected in expense tab
@@ -876,7 +876,7 @@ function renderMemories(){
 }
 function showMemView(id){
   var mem=memories.filter(function(m){return m.id===id;})[0];if(!mem)return;
-  currentMemId=id;memViewDay=0;memSummaryOpen=false;memDayExpOpen=false;
+  currentMemId=id;memViewDay=0;memSummaryOpen=false;memDayExpOpen=false;memPCDayOpen=false;memPCAllOpen=false;
   document.getElementById('mem-view-title').textContent=mem.trip.dest;
   renderMemViewBody(mem);
   document.getElementById('mem-view-overlay').style.display='flex';
@@ -945,8 +945,22 @@ function toggleMemDayExp(){
   if(panel)panel.style.display=memDayExpOpen?'block':'none';
   if(chevron)chevron.style.transform=memDayExpOpen?'rotate(180deg)':'';
 }
+function toggleMemPCDay(){
+  memPCDayOpen=!memPCDayOpen;
+  var panel=document.getElementById('mem-pc-day-panel');
+  var chevron=document.getElementById('mem-pc-day-chevron');
+  if(panel)panel.style.display=memPCDayOpen?'block':'none';
+  if(chevron)chevron.style.transform=memPCDayOpen?'rotate(180deg)':'';
+}
+function toggleMemPCAll(){
+  memPCAllOpen=!memPCAllOpen;
+  var panel=document.getElementById('mem-pc-all-panel');
+  var chevron=document.getElementById('mem-pc-all-chevron');
+  if(panel)panel.style.display=memPCAllOpen?'block':'none';
+  if(chevron)chevron.style.transform=memPCAllOpen?'rotate(180deg)':'';
+}
 function selectMemDay(memId,dayIdx){
-  memViewDay=dayIdx;memDayExpOpen=false;
+  memViewDay=dayIdx;memDayExpOpen=false;memPCDayOpen=false;
   var mem=memories.filter(function(m){return m.id===memId;})[0];if(mem)renderMemViewBody(mem);
 }
 function renderMemViewBody(mem){
@@ -1072,18 +1086,50 @@ function renderMemViewBody(mem){
   var pcVisits=mem.pokeCenterVisits&&mem.pokeCenterVisits.length?mem.pokeCenterVisits:[];
   var pcHtml='';
   if(pcVisits.length){
-    pcHtml='<div style="background:#1a1a1a;border-radius:12px;padding:14px 16px;margin-top:12px;border:1px solid rgba(204,0,0,.25)">'+
-      '<div style="font-size:12px;font-weight:700;color:#CC0000;margin-bottom:10px;letter-spacing:.06em">🔴 拜訪的寶可夢中心</div>'+
-      pcVisits.map(function(i){
-        return'<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)">'+
-          '<span style="color:#CC0000;font-size:12px">✓</span>'+
-          '<div style="flex:1"><div style="font-size:13px;font-weight:600;color:#e0e0e0">'+escHtml(i.name)+'</div>'+
-          (i.city?'<div style="font-size:11px;color:#888">'+escHtml(i.city)+'</div>':'')+
+    // Compute current memViewDay's YYYY-MM-DD to match visitDate
+    var pcDayDate=null;
+    if(mem.trip.startDate){
+      var pcSp=mem.trip.startDate.split('-');
+      var pcBd=new Date(+pcSp[0],+pcSp[1]-1,+pcSp[2]);
+      pcBd.setDate(pcBd.getDate()+memViewDay);
+      pcDayDate=pcBd.getFullYear()+'-'+(''+(pcBd.getMonth()+1)).padStart(2,'0')+'-'+(''+pcBd.getDate()).padStart(2,'0');
+    }
+    var pcDayList=pcDayDate?pcVisits.filter(function(i){return i.visitDate===pcDayDate;}):[];
+    function pcRow(i){
+      return'<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06)">'+
+        '<span style="color:#CC0000;font-size:12px">✓</span>'+
+        '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#e0e0e0">'+escHtml(i.name)+'</div>'+
+        (i.city?'<div style="font-size:11px;color:#888">'+escHtml(i.city)+'</div>':'')+
+        '</div>'+
+        (i.visitDate?'<span style="font-size:11px;color:#aaa;flex-shrink:0">'+i.visitDate+'</span>':'')+
+      '</div>';
+    }
+    // 當日拜訪
+    if(pcDayList.length){
+      pcHtml+=
+        '<div onclick="toggleMemPCDay()" style="display:flex;align-items:center;justify-content:space-between;background:#2a2a2a;border-radius:10px;padding:12px 16px;cursor:pointer;margin-top:12px;border:1px solid rgba(204,0,0,.25)">'+
+          '<span style="font-size:13px;color:#CC0000;font-weight:700">🔴 當日拜訪寶可夢中心</span>'+
+          '<div style="display:flex;align-items:center;gap:10px">'+
+            '<span style="font-size:13px;font-weight:700;color:white;font-family:\'Share Tech Mono\',monospace">'+pcDayList.length+' <span style="font-size:11px;opacity:.6">間</span></span>'+
+            '<span id="mem-pc-day-chevron" style="font-size:11px;color:#888;transition:transform .2s'+(memPCDayOpen?';transform:rotate(180deg)':'')+'">▼</span>'+
           '</div>'+
-          (i.visitDate?'<span style="font-size:11px;color:#aaa">'+i.visitDate+'</span>':'')+
+        '</div>'+
+        '<div id="mem-pc-day-panel" style="display:'+(memPCDayOpen?'block':'none')+';background:#1a1a1a;border-radius:10px;padding:8px 16px;margin-top:4px">'+
+          pcDayList.map(pcRow).join('')+
         '</div>';
-      }).join('')+
-    '</div>';
+    }
+    // 全程拜訪
+    pcHtml+=
+      '<div onclick="toggleMemPCAll()" style="display:flex;align-items:center;justify-content:space-between;background:#2a2a2a;border-radius:10px;padding:12px 16px;cursor:pointer;margin-top:12px;border:1px solid rgba(204,0,0,.25)">'+
+        '<span style="font-size:13px;color:#CC0000;font-weight:700">🔴 全程拜訪寶可夢中心</span>'+
+        '<div style="display:flex;align-items:center;gap:10px">'+
+          '<span style="font-size:13px;font-weight:700;color:white;font-family:\'Share Tech Mono\',monospace">'+pcVisits.length+' <span style="font-size:11px;opacity:.6">間</span></span>'+
+          '<span id="mem-pc-all-chevron" style="font-size:11px;color:#888;transition:transform .2s'+(memPCAllOpen?';transform:rotate(180deg)':'')+'">▼</span>'+
+        '</div>'+
+      '</div>'+
+      '<div id="mem-pc-all-panel" style="display:'+(memPCAllOpen?'block':'none')+';background:#1a1a1a;border-radius:10px;padding:8px 16px;margin-top:4px">'+
+        pcVisits.slice().sort(function(a,b){return(a.visitDate||'').localeCompare(b.visitDate||'');}).map(pcRow).join('')+
+      '</div>';
   }
   body.innerHTML=dayTabsHtml+summaryBarHtml+flHtml+tlHtml+expHtml+pcHtml;
 }
