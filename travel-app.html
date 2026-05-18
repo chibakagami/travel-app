@@ -237,7 +237,7 @@ select.field-input option{background:#880000;color:white;}
 .photo-thumb{width:100%;max-width:300px;border-radius:8px;margin-top:6px;cursor:pointer;display:block;box-shadow:0 2px 8px rgba(0,0,0,.12);}
 .photo-upload-btn{background:rgba(59,76,202,.08);border:1.5px dashed #3B4CCA;border-radius:8px;color:#3B4CCA;font-size:11px;padding:5px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-family:'Noto Sans TC',sans-serif;}
 .photo-del-btn{background:none;border:none;color:#ccc;font-size:13px;cursor:pointer;padding:0 4px;display:none;}
-.photo-viewer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:1200;align-items:center;justify-content:center;cursor:pointer;}
+.photo-viewer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:1200;align-items:center;justify-content:center;cursor:pointer;}.toast-msg{position:fixed;bottom:96px;left:50%;transform:translateX(-50%);background:rgba(26,26,26,.93);color:white;padding:9px 20px;border-radius:20px;font-size:13px;z-index:2000;opacity:0;transition:opacity .3s;pointer-events:none;max-width:90vw;text-align:center;}.toast-msg.show{opacity:1;}
 .photo-viewer-overlay.open{display:flex;}.photo-viewer-overlay img{max-width:95vw;max-height:90vh;border-radius:10px;object-fit:contain;}
 /* FAB */
 .fab{position:fixed;bottom:80px;right:20px;width:52px;height:52px;border-radius:50%;background:#CC0000;color:white;border:none;font-size:26px;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(204,0,0,.5);z-index:1050;line-height:1;}
@@ -600,6 +600,7 @@ select.field-input option{background:#880000;color:white;}
   </div>
 </div>
 <!-- PHOTO VIEWER -->
+<div id="toast-msg" class="toast-msg"></div>
 <div class="photo-viewer-overlay" id="photo-viewer" onclick="closePhotoViewer()">
   <img id="photo-viewer-img" src="" alt="">
 </div>
@@ -1390,9 +1391,9 @@ function renderTimeline(){
         (editMode?'<div class="drag-handle" draggable="true" data-id="'+item.id+'" ondragstart="onDragStart(event,'+item.id+')" ondragend="onDragEnd(event)" ontouchstart="onTouchStart(event,'+item.id+')" ontouchmove="onTouchMove(event)" ontouchend="onTouchEnd(event)">⠿</div>':'')+
         '<div class="plan-time-col"><div class="plan-time">'+startT+'</div>'+(endT?'<div class="plan-end-time">↓'+endT+'</div>':'')+
         '</div><div class="plan-body">'+
-        '<div class="plan-name">'+item.name+'</div>'+
-        (item.note?'<div class="plan-note-txt">'+item.note+'</div>':'')+
-        '<div class="plan-tags"><span class="tag tag-cat">'+item.cat+'</span>'+(item.stay?'<span class="tag tag-stay">⏱ '+stayTxt(item.stay)+'</span>':'')+
+        '<div class="plan-name">'+escHtml(item.name)+'</div>'+
+        (item.note?'<div class="plan-note-txt">'+escHtml(item.note)+'</div>':'')+
+        '<div class="plan-tags"><span class="tag tag-cat">'+escHtml(item.cat)+'</span>'+(item.stay?'<span class="tag tag-stay">⏱ '+stayTxt(item.stay)+'</span>':'')+
         '</div>'+
         (function(){var url=pi&&pi.lat!=null?'https://maps.google.com/maps?q='+pi.lat+','+pi.lng:'https://www.google.com/maps/search/'+encodeURIComponent(item.name);return'<a class="plan-maps-link" href="'+url+'" target="_blank" rel="noopener">📍 Google 地圖</a>';})()+
         '</div>'+
@@ -1405,10 +1406,10 @@ function renderTimeline(){
       '</div>'+
       (editMode?
         '<div class="plan-edit-panel'+(isEditOpen?' open':'')+'" id="ep'+item.id+'">'+
-          '<input class="edit-input" id="en'+item.id+'" value="'+item.name+'" placeholder="名稱">'+
+          '<input class="edit-input" id="en'+item.id+'" value="'+escHtml(item.name)+'" placeholder="名稱">'+
           '<div class="edit-row">'+
             '<select class="edit-input" id="ec'+item.id+'">'+CATS.map(function(c){return'<option'+(c===item.cat?' selected':'')+'>'+c+'</option>';}).join('')+'</select>'+
-            '<input class="edit-input" id="eno'+item.id+'" value="'+(item.note||'')+'" placeholder="備註">'+
+            '<input class="edit-input" id="eno'+item.id+'" value="'+escHtml(item.note||'')+'" placeholder="備註">'+
           '</div>'+
           '<div class="edit-field-label" style="margin-bottom:6px">停留時間</div>'+
           '<div id="edit-drum'+item.id+'"></div>'+
@@ -1581,6 +1582,8 @@ function addPlanItem(){
   renderTimeline();saveData();
 }
 function delPlan(id){
+  if(!confirm('確定刪除此行程點？'))return;
+  deletePhoto('plan-'+id,function(){});
   planItems=planItems.filter(function(p){return p.id!==id;});
   transports=transports.filter(function(t){return t.afterItemId!==id;});
   planItems.filter(function(p){return p.dayIdx===currentDay;}).sort(function(a,b){return a.order-b.order;}).forEach(function(p,i){p.order=i;});
@@ -1689,7 +1692,7 @@ function renderExpenses(){
     return'<div class="expense-item">'+
       '<div class="exp-row">'+
         '<div class="expense-icon">'+e.cat+'</div>'+
-        '<div class="expense-info"><div class="expense-name">'+e.name+'</div>'+
+        '<div class="expense-info"><div class="expense-name">'+escHtml(e.name)+'</div>'+
           '<span class="pay-tag '+pm.cls+'">'+pm.label+'</span>'+
         '</div>'+
         '<div class="expense-amount">'+e.amount.toLocaleString()+'</div>'+
@@ -1700,7 +1703,7 @@ function renderExpenses(){
       (editMode?
         '<div class="exp-edit-panel'+(isOpen?' open':'')+'" id="exp-ep'+gi+'">'+
           '<div class="edit-row">'+
-            '<input class="edit-input" id="expname'+gi+'" value="'+e.name+'" placeholder="名稱">'+
+            '<input class="edit-input" id="expname'+gi+'" value="'+escHtml(e.name)+'" placeholder="名稱">'+
             '<input class="edit-input" type="number" inputmode="decimal" id="expamt'+gi+'" value="'+e.amount+'">'+
           '</div>'+
           '<div class="edit-row">'+
@@ -1784,7 +1787,7 @@ function submitAddExp(){
   expViewDay=dayIdx;
   closeAddExpModal();renderExpenses();saveData();
 }
-function delExp(i){expenses.splice(i,1);openExpEditIdx=null;renderExpenses();saveData();}
+function delExp(i){if(!confirm('確定刪除此筆費用？'))return;deletePhoto('exp-'+i,function(){});expenses.splice(i,1);openExpEditIdx=null;renderExpenses();saveData();}
 
 /* ── EXPORT ── */
 function openExportModal(){document.getElementById('export-modal').classList.add('open');}
@@ -1816,7 +1819,7 @@ function exportTripData(tObj,pItems,tcs,fls,exps,fname){
   lines.push('[行程]');
   lines.push(csvRow(['天數','名稱','類別','備註','停留(分)','緯度','經度']));
   pItems.slice().sort(function(a,b){return a.dayIdx-b.dayIdx||a.order-b.order;}).forEach(function(p){
-    lines.push(csvRow([p.dayIdx+1,p.name,p.cat,p.note||'',p.stayMin||0,p.lat!=null?p.lat:'',p.lng!=null?p.lng:'']));
+    lines.push(csvRow([p.dayIdx+1,p.name,p.cat,p.note||'',p.stay||0,p.lat!=null?p.lat:'',p.lng!=null?p.lng:'']));
   });
   lines.push('');
   lines.push('[交通]');
@@ -2126,7 +2129,7 @@ function saveData(){
     localStorage.setItem('tv_prep',JSON.stringify(prepItems));
     localStorage.setItem('tv_wish',JSON.stringify(wishItems));
     localStorage.setItem('tv_pc',JSON.stringify(pokeCenterItems));
-  }catch(e){}
+  }catch(e){if(e&&e.name==='QuotaExceededError')showToast('⚠️ 儲存空間不足，資料可能未完全儲存');}
 }
 function loadData(){
   try{
@@ -2178,7 +2181,7 @@ document.getElementById('start-date').value=today;
 var nx=new Date();nx.setDate(nx.getDate()+6);
 document.getElementById('end-date').value=nx.toISOString().split('T')[0];
 showHome();
-if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(function(){});
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').then(function(reg){reg.addEventListener('updatefound',function(){var nw=reg.installing;nw.addEventListener('statechange',function(){if(nw.state==='installed'&&navigator.serviceWorker.controller)showToast('🔄 App 已更新，請重新整理頁面',5000);});});}).catch(function(){});}
 
 /* ── BACKUP / RESTORE ── */
 function backupAll(){
@@ -2475,6 +2478,7 @@ function startSetPCLocation(id){
     if(banner){banner.querySelector('span').textContent='📍 點地圖設定寶可夢中心位置';banner.classList.add('show');}
   },100);
 }
+function showToast(msg,ms){var t=document.getElementById('toast-msg');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},ms||2800);}
 function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function startMapPin(itemId){
   var _pi=planItems.filter(function(p){return p.id===itemId;})[0];
@@ -2550,7 +2554,7 @@ function importCSVData(text){
     if(!r[1])return;
     var di=Math.max(0,(+r[0]||1)-1);
     var ord=mPlan.filter(function(p){return p.dayIdx===di;}).length;
-    var item={id:idC++,dayIdx:di,name:r[1],cat:r[2]||'🎪 體驗',note:r[3]||'',stayMin:+r[4]||60,order:ord};
+    var item={id:idC++,dayIdx:di,name:r[1],cat:r[2]||'🎪 體驗',note:r[3]||'',stay:+r[4]||60,order:ord};
     if(r[5]&&r[6]){item.lat=+r[5];item.lng=+r[6];}
     mPlan.push(item);
   });
@@ -2658,7 +2662,7 @@ function doImportExcel(input){
             else if(typeof costv==='string'){var cn=costv.replace(/[^\d.]/g,'');if(cn)cost=Math.round(+cn);}
             var ord=mPlan.filter(function(p){return p.dayIdx===di;}).length;
             var itemId=idC++;
-            mPlan.push({id:itemId,dayIdx:di,name:actStr,cat:'🎪 體驗',note:'',stayMin:60,order:ord});
+            mPlan.push({id:itemId,dayIdx:di,name:actStr,cat:'🎪 體驗',note:'',stay:60,order:ord});
             prevId=itemId;
           }
         }
@@ -2883,6 +2887,7 @@ function addPrepItem(){
   saveData();renderPrep();
 }
 function deletePrepItem(id){
+  if(!confirm('確定刪除此項目？'))return;
   prepItems=prepItems.filter(function(i){return i.id!==id;});
   saveData();renderPrep();
 }
@@ -2926,14 +2931,17 @@ function compressImage(file,maxPx,quality,cb){
     var img=new Image();
     img.onload=function(){
       var w=img.width,h=img.height;
+      if(!w||!h){showToast('⚠️ 無法讀取圖片尺寸');return;}
       if(w>maxPx||h>maxPx){var s=maxPx/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s);}
       var canvas=document.createElement('canvas');
       canvas.width=w;canvas.height=h;
       canvas.getContext('2d').drawImage(img,0,0,w,h);
       cb(canvas.toDataURL('image/jpeg',quality));
     };
+    img.onerror=function(){showToast('⚠️ 圖片讀取失敗，請換一張試試');};
     img.src=e.target.result;
   };
+  reader.onerror=function(){showToast('⚠️ 檔案讀取失敗');};
   reader.readAsDataURL(file);
 }
 function uploadPhoto(key,input){
